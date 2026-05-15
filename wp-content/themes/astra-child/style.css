@@ -2002,7 +2002,6 @@ a.umi-listing-author--link:focus-visible {
 #umi-cabinet.umi-cabinet.umi-page-root {
 	font-family: var(--umi-font);
 	color: var(--umi-slate);
-	max-width: 42rem;
 	margin: 0 auto;
 	padding: 0 0 2rem;
 }

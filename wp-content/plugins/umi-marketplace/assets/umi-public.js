@@ -368,62 +368,35 @@
     });
   }
 
-  function cabinetProfilePhotoToggleInit() {
-    var section = document.getElementById('umi-cabinet-profile');
-    var btn = document.querySelector('[data-umi-profile-photo-toggle]');
-    if (!section) return;
-    function setOpen(on) {
-      if (on) {
-        section.removeAttribute('hidden');
-        if (btn) btn.setAttribute('aria-expanded', 'true');
-      } else {
-        section.setAttribute('hidden', 'hidden');
-        if (btn) btn.setAttribute('aria-expanded', 'false');
+  // Modal open/close — runs immediately (only attaches document-level listeners).
+  (function () {
+    function openModal(id) {
+      var modal = document.getElementById(id);
+      if (!modal) return;
+      modal.removeAttribute('hidden');
+      document.body.style.overflow = 'hidden';
+      var first = modal.querySelector('button,input:not([type="hidden"]),textarea,select,a[href]');
+      if (first) setTimeout(function () { first.focus(); }, 40);
+    }
+    function closeModal(modal) {
+      if (!modal) return;
+      modal.setAttribute('hidden', 'hidden');
+      if (!document.querySelector('.umi-modal:not([hidden])')) {
+        document.body.style.overflow = '';
       }
     }
-    if (btn) {
-      btn.addEventListener('click', function () {
-        setOpen(section.hasAttribute('hidden'));
-      });
-    }
-    if (window.location.hash === '#umi-cabinet-profile') {
-      setOpen(true);
-      try {
-        section.scrollIntoView({
-          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-          block: 'nearest'
-        });
-      } catch (e) {}
-    }
-  }
-
-  function cabinetAdminChatToggleInit() {
-    var outer = document.getElementById('umi-cabinet-admin-chat');
-    var btn = outer ? outer.querySelector('[data-umi-admin-chat-toggle]') : null;
-    var panel = document.getElementById('umi-cabinet-admin-chat-panel');
-    if (!outer || !btn || !panel) return;
-    function setOpen(on) {
-      if (on) {
-        panel.removeAttribute('hidden');
-        btn.setAttribute('aria-expanded', 'true');
-      } else {
-        panel.setAttribute('hidden', 'hidden');
-        btn.setAttribute('aria-expanded', 'false');
-      }
-    }
-    btn.addEventListener('click', function () {
-      setOpen(panel.hasAttribute('hidden'));
+    document.addEventListener('click', function (e) {
+      var openBtn = e.target.closest('[data-umi-open-modal]');
+      if (openBtn) { openModal(openBtn.getAttribute('data-umi-open-modal')); return; }
+      var closeEl = e.target.closest('[data-umi-close-modal]');
+      if (closeEl) { closeModal(closeEl.closest('.umi-modal')); return; }
     });
-    if (window.location.hash === '#umi-cabinet-admin-chat') {
-      setOpen(true);
-      try {
-        outer.scrollIntoView({
-          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-          block: 'nearest'
-        });
-      } catch (e) {}
-    }
-  }
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      var open = document.querySelector('.umi-modal:not([hidden])');
+      if (open) closeModal(open);
+    });
+  }());
 
   function cabinetThreadDeleteInit() {
     if (!window.umiMp || !window.umiMp.nonce) return;
@@ -505,8 +478,6 @@
     cabinetUploadInit();
     cabinetPanelsInit();
     cabinetProductAuthorInit();
-    cabinetProfilePhotoToggleInit();
-    cabinetAdminChatToggleInit();
     cabinetThreadDeleteInit();
     favoritesInit();
     shareInit();

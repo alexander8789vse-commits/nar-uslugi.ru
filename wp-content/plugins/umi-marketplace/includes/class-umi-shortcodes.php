@@ -828,7 +828,7 @@ class Umi_Shortcodes {
 	 */
 	public static function user_cabinet() {
 		$uid = get_current_user_id();
-		$out = '<div class="umi-cabinet umi-page-root" id="umi-cabinet">';
+		$out = '<div class="umi-cabinet umi-page-root umi-cabinet--v2" id="umi-cabinet">';
 
 		if ( ! is_user_logged_in() ) {
 			$here = ( is_singular() && get_queried_object_id() ) ? get_permalink( get_queried_object_id() ) : home_url( '/' );
@@ -837,75 +837,104 @@ class Umi_Shortcodes {
 			return $out;
 		}
 
-		$user      = wp_get_current_user();
-		$is_seller = in_array( Umi_Roles::ROLE_SELLER, (array) $user->roles, true );
+		$user       = wp_get_current_user();
+		$is_seller  = in_array( Umi_Roles::ROLE_SELLER, (array) $user->roles, true );
 		$return_url = ( is_singular() && get_queried_object_id() ) ? get_permalink( get_queried_object_id() ) : home_url( '/' );
 		$return_url = esc_url( $return_url );
 
-		$flash_key = 'umi_cabinet_flash_' . $uid;
-		$flash     = get_transient( $flash_key );
+		// Flash messages.
+		$flash_key  = 'umi_cabinet_flash_' . $uid;
+		$flash      = get_transient( $flash_key );
+		$flash_html = '';
 		if ( false !== $flash && is_array( $flash ) ) {
 			delete_transient( $flash_key );
 			if ( ! empty( $flash['error'] ) ) {
-				$out .= '<p class="umi-error" role="alert">' . esc_html( (string) $flash['error'] ) . '</p>';
+				$flash_html .= '<p class="umi-error" role="alert">' . esc_html( (string) $flash['error'] ) . '</p>';
 			}
 			if ( ! empty( $flash['success'] ) ) {
-				$out .= '<p class="umi-success" role="status">' . esc_html( (string) $flash['success'] ) . '</p>';
+				$flash_html .= '<p class="umi-success" role="status">' . esc_html( (string) $flash['success'] ) . '</p>';
 			}
 			if ( ! empty( $flash['notice'] ) ) {
-				$out .= '<p class="umi-notice" role="status">' . esc_html( (string) $flash['notice'] ) . '</p>';
+				$flash_html .= '<p class="umi-notice" role="status">' . esc_html( (string) $flash['notice'] ) . '</p>';
+			}
+		}
+		if ( $flash_html ) {
+			$out .= '<div class="umi-cabinet-flash">' . $flash_html . '</div>';
+		}
+
+		// Avatar.
+		$photo_id = (int) get_user_meta( $uid, 'umi_profile_photo', true );
+		$ava_url  = ( $photo_id > 0 ) ? wp_get_attachment_image_url( $photo_id, 'thumbnail' ) : '';
+
+		// Which modal to auto-open on page load.
+		$auto_open = '';
+
+		// Edit-listing: only rendered if umi_edit in URL.
+		$edit_post = null;
+		$edit_get  = isset( $_GET['umi_edit'] ) ? (int) $_GET['umi_edit'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( $edit_get > 0 && $is_seller ) {
+			$e = get_post( $edit_get );
+			if ( $e && (int) $e->post_author === (int) $uid
+				&& in_array( $e->post_type, array( Umi_Cpt::SERVICE, Umi_Cpt::PRODUCT ), true )
+				&& in_array( $e->post_status, array( 'publish', 'pending', 'draft' ), true ) ) {
+				$edit_post = $e;
+				$auto_open = 'umi-modal-edit-' . (int) $e->ID;
 			}
 		}
 
-		$out .= '<header class="umi-cabinet-section umi-cabinet-summary" aria-label="' . esc_attr__( 'Сводка', 'umi-marketplace' ) . '">';
-		$photo_id = (int) get_user_meta( $uid, 'umi_profile_photo', true );
-		$ava_url  = ( $photo_id > 0 ) ? wp_get_attachment_image_url( $photo_id, 'thumbnail' ) : '';
-		$out     .= '<div class="umi-cabinet-user">';
-		$out     .= '<div class="umi-cabinet-user__ava' . ( $photo_id > 0 ? ' umi-cabinet-user__ava--editable' : '' ) . '">';
-		if ( $ava_url ) {
-			$out .= '<img class="umi-cabinet-avatar" src="' . esc_url( $ava_url ) . '" alt="" width="72" height="72" />';
-		} else {
-			$out .= get_avatar( $uid, 72, '', '', array( 'class' => 'umi-cabinet-avatar' ) );
+		// Deal: auto-open deals modal if umi_deal is in URL.
+		$deal_view = isset( $_GET['umi_deal'] ) ? (int) $_GET['umi_deal'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( '' === $auto_open && $deal_view > 0 && Umi_Deals::user_can_access_deal( $deal_view, $uid ) ) {
+			$auto_open = 'umi-modal-deals';
 		}
-		if ( $photo_id > 0 ) {
-			$out .= '<button type="button" class="umi-cabinet-avatar-edit" data-umi-profile-photo-toggle aria-expanded="false" aria-controls="umi-cabinet-profile" title="' . esc_attr__( 'Изменить фото профиля', 'umi-marketplace' ) . '">';
-			$out .= '<span class="screen-reader-text">' . esc_html__( 'Изменить фото профиля', 'umi-marketplace' ) . '</span>';
-			$out .= '<svg class="umi-cabinet-avatar-edit__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/></svg>';
-			$out .= '</button>';
-		}
-		$out .= '</div><div class="umi-cabinet-user__text">';
-		$out .= '<p class="umi-cabinet-user__name">' . esc_html( $user->display_name ? $user->display_name : $user->user_login ) . '</p>';
-		$out .= '<p class="umi-cabinet-role umi-cabinet-role--inline"><strong>' . esc_html__( 'Роль', 'umi-marketplace' ) . ':</strong> ';
-		$out .= $is_seller
-			? esc_html__( 'Продавец', 'umi-marketplace' )
-			: esc_html__( 'Покупатель', 'umi-marketplace' );
-		$out .= '</p></div></div>';
-		$out .= '<div class="umi-cabinet-summary-row umi-cabinet-summary-row--bal"><div class="umi-cabinet-balance-wrap">' . do_shortcode( '[umi_balance]' ) . '</div></div></header>';
 
-		$out .= '<section class="umi-cabinet-section umi-cabinet-profile" id="umi-cabinet-profile" aria-label="' . esc_attr__( 'Фото профиля', 'umi-marketplace' ) . '"' . ( $photo_id > 0 ? ' hidden' : '' ) . '>';
-		$out .= '<h2 class="umi-cabinet-heading">' . esc_html__( 'Фото в профиле', 'umi-marketplace' ) . '</h2>';
-		$out .= '<p class="umi-cabinet-lead umi-text-muted">' . esc_html__( 'Будет отображаться в кабинете. Можно заменить или убрать.', 'umi-marketplace' ) . '</p>';
+		// Threads (used in modal and sidebar badge).
+		$threads = Umi_Chat::threads_for_user( $uid, 25 );
+
+		// Admin chat thread.
+		$adm_thread = (int) Umi_Chat::get_or_create_admin_thread( $uid );
+
+		// ===================== MODALS =====================
+
+		// Helper: open modal wrapper.
+		$mo = function ( $id, $title_id, $title_text ) use ( $auto_open ) {
+			$hidden = ( $auto_open === $id ) ? '' : ' hidden';
+			return '<div class="umi-modal" id="' . esc_attr( $id ) . '"' . $hidden . ' role="dialog" aria-modal="true" aria-labelledby="' . esc_attr( $title_id ) . '">'
+				. '<div class="umi-modal__backdrop" data-umi-close-modal></div>'
+				. '<div class="umi-modal__box">'
+				. '<div class="umi-modal__head">'
+				. '<h2 class="umi-modal__title" id="' . esc_attr( $title_id ) . '">' . esc_html( $title_text ) . '</h2>'
+				. '<button type="button" class="umi-modal__close" data-umi-close-modal aria-label="' . esc_attr__( 'Закрыть', 'umi-marketplace' ) . '">&#x2715;</button>'
+				. '</div>'
+				. '<div class="umi-modal__body">';
+		};
+		$mc = '</div></div></div>'; // close .umi-modal__body + .umi-modal__box + .umi-modal
+
+		// 1. Avatar modal.
+		$out .= $mo( 'umi-modal-avatar', 'umi-modal-avatar-title', __( 'Фото профиля', 'umi-marketplace' ) );
+		$out .= '<p class="umi-text-muted">' . esc_html__( 'Будет отображаться в кабинете. Можно заменить или убрать.', 'umi-marketplace' ) . '</p>';
 		$out .= '<form method="post" class="umi-form umi-cabinet-profile-form" action="' . esc_url( $return_url ) . '#umi-cabinet" enctype="multipart/form-data">';
 		$out .= '<input type="hidden" name="umi_cabinet" value="1" />';
 		$out .= '<input type="hidden" name="umi_cabinet_action" value="profile" />';
 		$out .= '<input type="hidden" name="umi_cabinet_return" value="' . esc_url( $return_url ) . '" />';
 		$out .= '<input type="hidden" name="umi_profile_photo_clear" value="0" class="umi-profile-clear-flag" />';
 		$out .= wp_nonce_field( 'umi_cabinet_profile', 'umi_cabinet_nonce_profile', true, false );
-		$out .= '<div class="umi-cabinet-upload umi-cabinet-profile-upload" data-umi-cabinet-upload><input type="hidden" class="umi-cabinet-attachment-id" name="umi_profile_photo_id" value="' . ( $photo_id > 0 ? (int) $photo_id : '' ) . '" id="umi_prof_hid" />';
+		$out .= '<div class="umi-cabinet-upload umi-cabinet-profile-upload" data-umi-cabinet-upload>';
+		$out .= '<input type="hidden" class="umi-cabinet-attachment-id" name="umi_profile_photo_id" value="' . ( $photo_id > 0 ? (int) $photo_id : '' ) . '" id="umi_prof_hid" />';
 		$out .= '<div class="umi-cabinet-upload-preview"' . ( $photo_id ? '' : ' hidden' ) . '><img src="' . ( $ava_url ? esc_url( $ava_url ) : '' ) . '" alt="" width="200" height="200" style="object-fit:cover;border-radius:8px;max-width:100%;height:auto" /></div>';
 		$out .= '<p class="umi-cabinet-upload-actions"><label class="umi-cabinet-file-label umi-btn umi-btn--secondary"><input type="file" id="umi_prof_file" class="umi-cabinet-file" accept="image/jpeg,image/png,image/gif,image/webp" style="position:absolute;opacity:0;width:0;height:0" tabindex="-1" />';
 		$out .= '<span>' . esc_html__( 'Выбрать изображение', 'umi-marketplace' ) . '</span></label> ';
 		$out .= '<button type="button" class="umi-cabinet-upload-clear umi-link" style="display:' . ( $photo_id ? 'inline' : 'none' ) . '"' . ( $photo_id ? '' : ' hidden' ) . '>' . esc_html__( 'Убрать', 'umi-marketplace' ) . '</button></p></div>';
-		$out .= '<p><button type="submit" class="umi-btn umi-btn--primary">' . esc_html__( 'Сохранить', 'umi-marketplace' ) . '</button></p></form></section>';
+		$out .= '<p><button type="submit" class="umi-btn umi-btn--primary">' . esc_html__( 'Сохранить', 'umi-marketplace' ) . '</button></p></form>';
+		$out .= $mc;
 
-		$adm_thread      = (int) Umi_Chat::get_or_create_admin_thread( $uid );
-		$admin_chat_html = ( $adm_thread > 0 ) ? self::render_cabinet_admin_chat_bar( $adm_thread ) : '';
-
+		// 2. Deals modal.
+		$out .= $mo( 'umi-modal-deals', 'umi-modal-deals-title', __( 'Мои сделки', 'umi-marketplace' ) );
 		$out .= self::render_deals_inner( $return_url );
+		$out .= $mc;
 
-		$threads = Umi_Chat::threads_for_user( $uid, 25 );
-		$out    .= '<section class="umi-cabinet-section" aria-label="' . esc_attr__( 'Сообщения', 'umi-marketplace' ) . '">';
-		$out    .= '<h2 class="umi-cabinet-heading">' . esc_html__( 'Диалоги', 'umi-marketplace' ) . '</h2>';
+		// 3. Threads/dialogs modal.
+		$out .= $mo( 'umi-modal-threads', 'umi-modal-threads-title', __( 'Мои диалоги', 'umi-marketplace' ) );
 		if ( count( $threads ) ) {
 			$out .= '<ul class="umi-cabinet-threads">';
 			foreach ( $threads as $t ) {
@@ -949,106 +978,199 @@ class Umi_Shortcodes {
 		} else {
 			$out .= '<p class="umi-cabinet-empty">' . esc_html__( 'Пока нет переписок. Откройте объявление и нажмите «Написать продавцу».', 'umi-marketplace' ) . '</p>';
 		}
-		$out .= '</section>';
+		$out .= $mc;
 
-		if ( ! $is_seller ) {
-			$out .= '<section class="umi-cabinet-section" aria-label="' . esc_attr__( 'Стать продавцом', 'umi-marketplace' ) . '">';
-			$out .= '<h2 class="umi-cabinet-heading">' . esc_html__( 'Продавать и размещать услуги', 'umi-marketplace' ) . '</h2>';
-			$out .= '<p class="umi-notice">' . esc_html__( 'Чтобы добавлять услуги и товары, оформите профиль продавца.', 'umi-marketplace' ) . '</p>';
-			$out .= '<div class="umi-cabinet-embed">' . self::become_seller() . '</div></section>';
-			$out .= $admin_chat_html;
+		// 4. Add listing modal.
+		$out .= $mo( 'umi-modal-add', 'umi-modal-add-title', __( 'Добавить объявление', 'umi-marketplace' ) );
+		if ( $is_seller ) {
+			$out .= '<div class="umi-cabinet-panels" data-umi-cabinet-panels>';
+			$out .= '<nav class="umi-cabinet-nav" role="tablist" aria-label="' . esc_attr__( 'Добавить объявление', 'umi-marketplace' ) . '">';
+			$out .= '<button type="button" class="umi-cabinet-tab is-active" role="tab" id="tab-umi-s" aria-selected="true" aria-controls="panel-umi-s" data-umi-cabinet-tab="s">' . esc_html__( 'Добавить услугу', 'umi-marketplace' ) . '</button>';
+			$out .= '<button type="button" class="umi-cabinet-tab" role="tab" id="tab-umi-p" aria-selected="false" aria-controls="panel-umi-p" data-umi-cabinet-tab="p">' . esc_html__( 'Добавить товар', 'umi-marketplace' ) . '</button></nav>';
+			$out .= '<div class="umi-cabinet-panel is-active" id="panel-umi-s" role="tabpanel" aria-labelledby="tab-umi-s" data-umi-cabinet-panel="s">';
+			$out .= '<h3 class="umi-cabinet-subh">' . esc_html__( 'Новая услуга', 'umi-marketplace' ) . '</h3>';
+			$out .= self::render_cabinet_add_form( Umi_Cpt::SERVICE, $return_url );
 			$out .= '</div>';
-			return $out;
+			$out .= '<div class="umi-cabinet-panel" id="panel-umi-p" role="tabpanel" aria-labelledby="tab-umi-p" hidden data-umi-cabinet-panel="p">';
+			$out .= '<h3 class="umi-cabinet-subh">' . esc_html__( 'Новый товар', 'umi-marketplace' ) . '</h3>';
+			$out .= self::render_cabinet_add_form( Umi_Cpt::PRODUCT, $return_url );
+			$out .= '</div></div>';
+		} else {
+			$out .= '<p class="umi-notice">' . esc_html__( 'Чтобы добавлять услуги и товары, оформите профиль продавца.', 'umi-marketplace' ) . '</p>';
+			$out .= self::become_seller();
 		}
+		$out .= $mc;
 
-		// Seller continues below (объявления, формы).
-		$edit_post    = null;
-		$edit_get     = isset( $_GET['umi_edit'] ) ? (int) $_GET['umi_edit'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( $edit_get > 0 ) {
-			$e = get_post( $edit_get );
-			if ( $e && (int) $e->post_author === (int) $uid
-				&& in_array( $e->post_type, array( Umi_Cpt::SERVICE, Umi_Cpt::PRODUCT ), true )
-				&& in_array( $e->post_status, array( 'publish', 'pending', 'draft' ), true ) ) {
-				$edit_post = $e;
-			}
+		// 5. Admin chat modal.
+		$out .= $mo( 'umi-modal-admin-chat', 'umi-modal-admin-chat-title', __( 'Чат с администратором', 'umi-marketplace' ) );
+		if ( $adm_thread > 0 ) {
+			wp_enqueue_script( 'umi-mp-chat' );
+			$out .= '<p class="umi-text-muted">' . esc_html__( 'Вопросы по сайту, модерации и сделкам. Ответы не мгновенны.', 'umi-marketplace' ) . '</p>';
+			$out .= self::render_chat_thread_box( $adm_thread );
+		} else {
+			$out .= '<p class="umi-cabinet-empty">' . esc_html__( 'Чат с администратором недоступен.', 'umi-marketplace' ) . '</p>';
 		}
+		$out .= $mc;
 
+		// 6. Edit listing modal (only when umi_edit is in URL).
 		if ( $edit_post ) {
-			$cancel = remove_query_arg( 'umi_edit', $return_url );
-			$out   .= '<section class="umi-cabinet-section umi-cabinet-section--edit" id="umi-cabinet-edit" aria-label="' . esc_attr__( 'Редактирование объявления', 'umi-marketplace' ) . '">';
-			$out   .= '<h2 class="umi-cabinet-heading">' . esc_html__( 'Редактирование', 'umi-marketplace' ) . '</h2>';
-			$out   .= '<p class="umi-cabinet-lead umi-text-muted"><a class="umi-link" href="' . esc_url( $cancel . '#umi-cabinet' ) . '">' . esc_html__( '← Отмена, к списку объявлений', 'umi-marketplace' ) . '</a></p>';
+			$pid    = (int) $edit_post->ID;
+			$mid    = 'umi-modal-edit-' . $pid;
+			$cancel = esc_url( remove_query_arg( 'umi_edit', $return_url ) . '#umi-cabinet' );
+			$out   .= $mo( $mid, $mid . '-title', __( 'Редактирование объявления', 'umi-marketplace' ) );
+			$out   .= '<p class="umi-text-muted"><a class="umi-link" href="' . $cancel . '">' . esc_html__( '← Отмена, к списку объявлений', 'umi-marketplace' ) . '</a></p>';
 			$out   .= self::render_cabinet_edit_form( $edit_post, $return_url );
-			$out   .= '</section>';
+			$out   .= $mc;
 		}
 
-		$q = new WP_Query(
-			array(
-				'post_type'      => array( Umi_Cpt::SERVICE, Umi_Cpt::PRODUCT ),
-				'author'         => $uid,
-				'post_status'    => array( 'publish', 'pending', 'draft' ),
-				'posts_per_page' => 100,
-				'orderby'        => 'date',
-				'order'          => 'DESC',
-			)
-		);
+		// ===================== TWO-COLUMN LAYOUT =====================
 
-		$out .= '<section class="umi-cabinet-section" aria-label="' . esc_attr__( 'Мои объявления', 'umi-marketplace' ) . '">';
+		$out .= '<div class="umi-cabinet-layout">';
+
+		// --- Left: sidebar ---
+		$out .= '<aside class="umi-cabinet-sidebar">';
+
+		// Profile card: avatar (clickable) + name + role.
+		$out .= '<div class="umi-cabinet-profile-card">';
+		$out .= '<button type="button" class="umi-cabinet-avatar-btn" data-umi-open-modal="umi-modal-avatar" aria-label="' . esc_attr__( 'Изменить фото профиля', 'umi-marketplace' ) . '">';
+		if ( $ava_url ) {
+			$out .= '<img class="umi-cabinet-avatar" src="' . esc_url( $ava_url ) . '" alt="" width="64" height="64" />';
+		} else {
+			$out .= get_avatar( $uid, 64, '', '', array( 'class' => 'umi-cabinet-avatar' ) );
+		}
+		$out .= '<span class="umi-cabinet-avatar-badge" aria-hidden="true">';
+		$out .= '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/></svg>';
+		$out .= '</span></button>';
+		$out .= '<div class="umi-cabinet-profile-info">';
+		$out .= '<p class="umi-cabinet-profile-name">' . esc_html( $user->display_name ? $user->display_name : $user->user_login ) . '</p>';
+		$out .= '<p class="umi-cabinet-profile-role">' . ( $is_seller ? esc_html__( 'Продавец', 'umi-marketplace' ) : esc_html__( 'Покупатель', 'umi-marketplace' ) ) . '</p>';
+		$out .= '</div></div>';
+
+		// Balance.
+		$out .= '<div class="umi-cabinet-sidebar-balance">' . do_shortcode( '[umi_balance]' ) . '</div>';
+
+		// Nav items.
+		$out .= '<nav class="umi-cabinet-sidebar-nav" aria-label="' . esc_attr__( 'Меню кабинета', 'umi-marketplace' ) . '">';
+
+		$deals_list  = Umi_Deals::deals_for_user( $uid, 50 );
+		$deals_count = count( $deals_list );
+		$out .= '<button type="button" class="umi-cabinet-nav-item" data-umi-open-modal="umi-modal-deals">';
+		$out .= '<span class="umi-cabinet-nav-item__label">' . esc_html__( 'Мои сделки', 'umi-marketplace' ) . '</span>';
+		if ( $deals_count > 0 ) {
+			$out .= '<span class="umi-cabinet-nav-item__count">' . (int) $deals_count . '</span>';
+		}
+		$out .= '</button>';
+
+		$unread_total = 0;
+		foreach ( $threads as $t ) {
+			$unread_total += isset( $t['unread_count'] ) ? (int) $t['unread_count'] : 0;
+		}
+		$out .= '<button type="button" class="umi-cabinet-nav-item" data-umi-open-modal="umi-modal-threads">';
+		$out .= '<span class="umi-cabinet-nav-item__label">' . esc_html__( 'Мои диалоги', 'umi-marketplace' ) . '</span>';
+		$badge_empty = $unread_total < 1 ? ' umi-chat-badge--empty' : '';
+		$out .= '<span class="umi-chat-badge umi-cabinet-nav-item__badge' . $badge_empty . '" data-umi-unread="' . (int) $unread_total . '">' . ( $unread_total > 0 ? (int) $unread_total : '' ) . '</span>';
+		$out .= '</button>';
+
+		if ( $is_seller ) {
+			$out .= '<button type="button" class="umi-cabinet-nav-item" data-umi-open-modal="umi-modal-add">';
+			$out .= '<span class="umi-cabinet-nav-item__label">' . esc_html__( 'Добавить объявление', 'umi-marketplace' ) . '</span>';
+			$out .= '</button>';
+		} else {
+			$out .= '<button type="button" class="umi-cabinet-nav-item" data-umi-open-modal="umi-modal-add">';
+			$out .= '<span class="umi-cabinet-nav-item__label">' . esc_html__( 'Стать продавцом', 'umi-marketplace' ) . '</span>';
+			$out .= '</button>';
+		}
+
+		$out .= '<button type="button" class="umi-cabinet-nav-item" data-umi-open-modal="umi-modal-admin-chat">';
+		$out .= '<span class="umi-cabinet-nav-item__label">' . esc_html__( 'Чат с администратором', 'umi-marketplace' ) . '</span>';
+		$out .= '</button>';
+
+		$out .= '</nav>';  // end .umi-cabinet-sidebar-nav
+		$out .= '</aside>'; // end .umi-cabinet-sidebar
+
+		// --- Right: listings table ---
+		$out .= '<div class="umi-cabinet-main">';
+		$out .= '<div class="umi-cabinet-main-header">';
 		$out .= '<h2 class="umi-cabinet-heading">' . esc_html__( 'Мои объявления', 'umi-marketplace' ) . '</h2>';
-		if ( $q->have_posts() ) {
-			$out .= '<ul class="umi-cabinet-list">';
-			while ( $q->have_posts() ) {
-				$q->the_post();
-				$pid  = (int) get_the_ID();
-				$type = get_post_type( $pid );
-				$type_label = ( Umi_Cpt::SERVICE === $type ) ? __( 'Услуга', 'umi-marketplace' ) : __( 'Товар', 'umi-marketplace' );
-				$st   = get_post_status( $pid );
+		if ( $is_seller ) {
+			$out .= '<button type="button" class="umi-btn umi-btn--primary umi-btn--sm" data-umi-open-modal="umi-modal-add">' . esc_html__( '+ Добавить', 'umi-marketplace' ) . '</button>';
+		}
+		$out .= '</div>';
+
+		if ( $is_seller ) {
+			$q = new WP_Query(
+				array(
+					'post_type'      => array( Umi_Cpt::SERVICE, Umi_Cpt::PRODUCT ),
+					'author'         => $uid,
+					'post_status'    => array( 'publish', 'pending', 'draft' ),
+					'posts_per_page' => 100,
+					'orderby'        => 'date',
+					'order'          => 'DESC',
+					'no_found_rows'  => true,
+				)
+			);
+			if ( $q->have_posts() ) {
 				$st_label = array(
 					'publish' => __( 'Опубликовано', 'umi-marketplace' ),
 					'pending' => __( 'На модерации', 'umi-marketplace' ),
 					'draft'   => __( 'Черновик', 'umi-marketplace' ),
 				);
-				$st_text = isset( $st_label[ $st ] ) ? $st_label[ $st ] : $st;
-				$link     = ( 'publish' === $st ) ? get_permalink( $pid ) : '';
-				$title_html = $link
-					? '<a class="umi-cabinet-list-link" href="' . esc_url( $link ) . '">' . esc_html( get_the_title() ) . '</a>'
-					: '<span class="umi-cabinet-list-title">' . esc_html( get_the_title() ) . '</span>';
-				$out .= '<li class="umi-cabinet-list-item"><span class="umi-cabinet-list-type">' . esc_html( $type_label ) . '</span> — ' . $title_html;
-				$out .= ' <span class="umi-cabinet-list-status">(' . esc_html( $st_text ) . ')</span>';
-				$ed_href  = esc_url( add_query_arg( 'umi_edit', $pid, $return_url ) . '#umi-cabinet' );
-				$out     .= ' <span class="umi-cabinet-list-actions"> ';
-				$out     .= '<a class="umi-link umi-cabinet-list-edit" href="' . $ed_href . '">' . esc_html__( 'Изменить', 'umi-marketplace' ) . '</a>';
-				$out     .= ' <form method="post" class="umi-cabinet-list-delete" action="' . esc_url( $return_url ) . '" onsubmit="return window.confirm(' . "'" . esc_js( __( 'Удалить объявление? Его можно будет восстановить в админке.', 'umi-marketplace' ) ) . "'" . ');">';
-				$out     .= '<input type="hidden" name="umi_cabinet" value="1" /><input type="hidden" name="umi_cabinet_action" value="delete_listing" />';
-				$out     .= '<input type="hidden" name="umi_cabinet_return" value="' . esc_url( $return_url ) . '" />';
-				$out     .= '<input type="hidden" name="umi_delete_post_id" value="' . (int) $pid . '" />';
-				$out     .= wp_nonce_field( 'umi_cabinet_delete_listing', 'umi_cabinet_nonce_del', true, false );
-				$out     .= '<button type="submit" class="umi-link umi-cabinet-list-del-btn">' . esc_html__( 'Удалить', 'umi-marketplace' ) . '</button></form></span></li>';
+				$out .= '<table class="umi-cabinet-table">';
+				$out .= '<thead><tr>';
+				$out .= '<th>' . esc_html__( 'Тип', 'umi-marketplace' ) . '</th>';
+				$out .= '<th>' . esc_html__( 'Название', 'umi-marketplace' ) . '</th>';
+				$out .= '<th>' . esc_html__( 'Статус', 'umi-marketplace' ) . '</th>';
+				$out .= '<th>' . esc_html__( 'Действия', 'umi-marketplace' ) . '</th>';
+				$out .= '</tr></thead><tbody>';
+				while ( $q->have_posts() ) {
+					$q->the_post();
+					$lpid     = (int) get_the_ID();
+					$ltype    = get_post_type( $lpid );
+					$type_l   = ( Umi_Cpt::SERVICE === $ltype ) ? __( 'Услуга', 'umi-marketplace' ) : __( 'Товар', 'umi-marketplace' );
+					$lst      = get_post_status( $lpid );
+					$lst_text = isset( $st_label[ $lst ] ) ? $st_label[ $lst ] : $lst;
+					$view_url = ( 'publish' === $lst ) ? get_permalink( $lpid ) : '';
+					$edit_url = esc_url( add_query_arg( 'umi_edit', $lpid, $return_url ) . '#umi-cabinet' );
+					$thumb    = get_the_post_thumbnail( $lpid, array( 40, 40 ), array( 'style' => 'width:36px;height:36px;object-fit:cover;border-radius:4px;flex-shrink:0;display:block' ) );
+					$out .= '<tr>';
+					$out .= '<td><span class="umi-cabinet-table-type">' . esc_html( $type_l ) . '</span></td>';
+					$out .= '<td><div class="umi-cabinet-table-title-cell">';
+					if ( $thumb ) {
+						$out .= $thumb; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					}
+					$title_text = esc_html( get_the_title() );
+					if ( $view_url ) {
+						$out .= '<a class="umi-link" href="' . esc_url( $view_url ) . '" target="_blank" rel="noopener">' . $title_text . '</a>';
+					} else {
+						$out .= '<span>' . $title_text . '</span>';
+					}
+					$out .= '</div></td>';
+					$out .= '<td><span class="umi-cabinet-table-status umi-cabinet-table-status--' . esc_attr( $lst ) . '">' . esc_html( $lst_text ) . '</span></td>';
+					$svg_edit   = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/></svg>';
+					$svg_trash  = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M6 19c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="currentColor"/></svg>';
+					$out .= '<td class="umi-cabinet-table-actions"><div class="umi-cabinet-table-actions-inner">';
+					$out .= '<a class="umi-cabinet-icon-btn umi-cabinet-icon-btn--edit" href="' . $edit_url . '" title="' . esc_attr__( 'Изменить', 'umi-marketplace' ) . '" aria-label="' . esc_attr__( 'Изменить', 'umi-marketplace' ) . '">' . $svg_edit . '</a>';
+					$out .= '<form method="post" class="umi-cabinet-list-delete" action="' . esc_url( $return_url ) . '" onsubmit="return window.confirm(' . "'" . esc_js( __( 'Удалить объявление? Его можно будет восстановить в админке.', 'umi-marketplace' ) ) . "'" . ');">';
+					$out .= '<input type="hidden" name="umi_cabinet" value="1" /><input type="hidden" name="umi_cabinet_action" value="delete_listing" />';
+					$out .= '<input type="hidden" name="umi_cabinet_return" value="' . esc_url( $return_url ) . '" />';
+					$out .= '<input type="hidden" name="umi_delete_post_id" value="' . (int) $lpid . '" />';
+					$out .= wp_nonce_field( 'umi_cabinet_delete_listing', 'umi_cabinet_nonce_del', true, false );
+					$out .= '<button type="submit" class="umi-cabinet-icon-btn umi-cabinet-icon-btn--delete" title="' . esc_attr__( 'Удалить', 'umi-marketplace' ) . '" aria-label="' . esc_attr__( 'Удалить', 'umi-marketplace' ) . '">' . $svg_trash . '</button></form>';
+					$out .= '</div></td></tr>';
+				}
+				$out .= '</tbody></table>';
+				wp_reset_postdata();
+			} else {
+				$out .= '<p class="umi-cabinet-empty">' . esc_html__( 'Пока нет объявлений. Нажмите «+ Добавить», чтобы разместить первое.', 'umi-marketplace' ) . '</p>';
 			}
-			$out .= '</ul>';
-			wp_reset_postdata();
 		} else {
-			$out .= '<p class="umi-cabinet-empty">' . esc_html__( 'Пока нет объявлений.', 'umi-marketplace' ) . '</p>';
+			$out .= '<p class="umi-cabinet-empty">' . esc_html__( 'Чтобы размещать объявления, оформите профиль продавца.', 'umi-marketplace' ) . '</p>';
 		}
-		$out .= '</section>';
+		$out .= '</div>'; // end .umi-cabinet-main
 
-		if ( ! $edit_post ) {
-			$out .= '<div class="umi-cabinet-panels" data-umi-cabinet-panels><nav class="umi-cabinet-nav" role="tablist" aria-label="' . esc_attr__( 'Добавить объявление', 'umi-marketplace' ) . '">';
-			$out .= '<button type="button" class="umi-cabinet-tab is-active" role="tab" id="tab-umi-s" aria-selected="true" aria-controls="panel-umi-s" data-umi-cabinet-tab="s">' . esc_html__( 'Добавить услугу', 'umi-marketplace' ) . '</button>';
-			$out .= '<button type="button" class="umi-cabinet-tab" role="tab" id="tab-umi-p" aria-selected="false" aria-controls="panel-umi-p" data-umi-cabinet-tab="p">' . esc_html__( 'Добавить товар', 'umi-marketplace' ) . '</button></nav>';
+		$out .= '</div>'; // end .umi-cabinet-layout
+		$out .= '</div>'; // end .umi-cabinet
 
-			$out .= '<div class="umi-cabinet-panel is-active" id="panel-umi-s" role="tabpanel" aria-labelledby="tab-umi-s" data-umi-cabinet-panel="s">';
-			$out .= '<h3 class="umi-cabinet-subh">' . esc_html__( 'Новая услуга', 'umi-marketplace' ) . '</h3>';
-			$out .= self::render_cabinet_add_form( Umi_Cpt::SERVICE, $return_url );
-			$out .= '</div>';
-
-			$out .= '<div class="umi-cabinet-panel" id="panel-umi-p" role="tabpanel" aria-labelledby="tab-umi-p" hidden data-umi-cabinet-panel="p">';
-			$out .= '<h3 class="umi-cabinet-subh">' . esc_html__( 'Новый товар', 'umi-marketplace' ) . '</h3>';
-			$out .= self::render_cabinet_add_form( Umi_Cpt::PRODUCT, $return_url );
-			$out .= '</div></div>';
-		}
-		$out .= $admin_chat_html;
-		$out .= '</div>';
 		return $out;
 	}
 
