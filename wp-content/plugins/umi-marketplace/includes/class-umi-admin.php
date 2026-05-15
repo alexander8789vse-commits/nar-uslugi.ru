@@ -719,14 +719,16 @@ class Umi_Admin {
 		foreach ( $cols as $k => $v ) {
 			$new[ $k ] = $v;
 			if ( 'email' === $k ) {
-				$new['umi_phone']  = __( 'Телефон', 'umi-marketplace' );
-				$new['umi_shares'] = __( 'Доли', 'umi-marketplace' );
+				$new['umi_phone']    = __( 'Телефон', 'umi-marketplace' );
+				$new['umi_shares']   = __( 'Доли', 'umi-marketplace' );
+				$new['umi_listings'] = __( 'Объявления', 'umi-marketplace' );
 				$add = true;
 			}
 		}
 		if ( ! $add ) {
-			$new['umi_phone']  = __( 'Телефон', 'umi-marketplace' );
-			$new['umi_shares'] = __( 'Доли', 'umi-marketplace' );
+			$new['umi_phone']    = __( 'Телефон', 'umi-marketplace' );
+			$new['umi_shares']   = __( 'Доли', 'umi-marketplace' );
+			$new['umi_listings'] = __( 'Объявления', 'umi-marketplace' );
 		}
 		return $new;
 	}
@@ -748,7 +750,54 @@ class Umi_Admin {
 			$phone = (string) get_user_meta( (int) $user_id, 'umi_phone', true );
 			return $phone ? esc_html( $phone ) : '—';
 		}
+		if ( 'umi_listings' === $col ) {
+			$counts = self::count_listings_for_user( (int) $user_id );
+			$total  = $counts['publish'] + $counts['pending'] + $counts['draft'];
+			if ( 0 === $total ) {
+				return '—';
+			}
+			$parts = array();
+			if ( $counts['publish'] > 0 ) {
+				$url     = admin_url( 'edit.php?post_type=' . Umi_Cpt::SERVICE . '&author=' . (int) $user_id . '&post_status=publish' );
+				$parts[] = '<a href="' . esc_url( $url ) . '">' . (int) $counts['publish'] . ' ' . esc_html__( 'опубл.', 'umi-marketplace' ) . '</a>';
+			}
+			if ( $counts['pending'] > 0 ) {
+				$url     = admin_url( 'edit.php?post_type=' . Umi_Cpt::SERVICE . '&author=' . (int) $user_id . '&post_status=pending' );
+				$parts[] = '<a href="' . esc_url( $url ) . '">' . (int) $counts['pending'] . ' ' . esc_html__( 'модер.', 'umi-marketplace' ) . '</a>';
+			}
+			if ( $counts['draft'] > 0 ) {
+				$parts[] = (int) $counts['draft'] . ' ' . esc_html__( 'черн.', 'umi-marketplace' );
+			}
+			return implode( ', ', $parts );
+		}
 		return $output;
+	}
+
+	/**
+	 * @param int $user_id User ID.
+	 * @return int[]
+	 */
+	private static function count_listings_for_user( $user_id ) {
+		$counts = array( 'publish' => 0, 'pending' => 0, 'draft' => 0 );
+		foreach ( array( Umi_Cpt::SERVICE, Umi_Cpt::PRODUCT ) as $pt ) {
+			$q = new WP_Query(
+				array(
+					'post_type'      => $pt,
+					'author'         => (int) $user_id,
+					'post_status'    => array( 'publish', 'pending', 'draft' ),
+					'posts_per_page' => -1,
+					'fields'         => 'ids',
+					'no_found_rows'  => false,
+				)
+			);
+			foreach ( $q->posts as $pid ) {
+				$st = get_post_status( (int) $pid );
+				if ( isset( $counts[ $st ] ) ) {
+					$counts[ $st ]++;
+				}
+			}
+		}
+		return $counts;
 	}
 
 	/**
@@ -950,6 +999,72 @@ class Umi_Admin {
 			echo '<p class="description">' . esc_html__( 'Нет сделок в статусе «Спор».', 'umi-marketplace' ) . '</p>';
 		}
 
+		$listings_q = new WP_Query(
+			array(
+				'post_type'      => array( Umi_Cpt::SERVICE, Umi_Cpt::PRODUCT ),
+				'author'         => $uid,
+				'post_status'    => array( 'publish', 'pending', 'draft' ),
+				'posts_per_page' => 100,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'no_found_rows'  => true,
+			)
+		);
+		echo '<h3 style="margin-top:1.5em">' . esc_html__( 'Объявления пользователя', 'umi-marketplace' ) . '</h3>';
+		if ( $listings_q->have_posts() ) {
+			$st_labels = array(
+				'publish' => __( 'Опубликовано', 'umi-marketplace' ),
+				'pending' => __( 'На модерации', 'umi-marketplace' ),
+				'draft'   => __( 'Черновик', 'umi-marketplace' ),
+			);
+			echo '<table class="widefat striped" style="max-width:min(100%,920px)"><thead><tr>';
+			echo '<th>' . esc_html__( 'Тип', 'umi-marketplace' ) . '</th>';
+			echo '<th>' . esc_html__( 'Название', 'umi-marketplace' ) . '</th>';
+			echo '<th>' . esc_html__( 'Статус', 'umi-marketplace' ) . '</th>';
+			echo '<th>' . esc_html__( 'Дата', 'umi-marketplace' ) . '</th>';
+			echo '<th>' . esc_html__( 'На сайте', 'umi-marketplace' ) . '</th>';
+			echo '</tr></thead><tbody>';
+			while ( $listings_q->have_posts() ) {
+				$listings_q->the_post();
+				$lpid     = (int) get_the_ID();
+				$ltype    = get_post_type( $lpid );
+				$type_l   = ( Umi_Cpt::SERVICE === $ltype ) ? __( 'Услуга', 'umi-marketplace' ) : __( 'Товар', 'umi-marketplace' );
+				$lst      = get_post_status( $lpid );
+				$lst_text = isset( $st_labels[ $lst ] ) ? $st_labels[ $lst ] : $lst;
+				$edit_url = get_edit_post_link( $lpid, 'raw' );
+				$view_url = ( 'publish' === $lst ) ? get_permalink( $lpid ) : '';
+				echo '<tr>';
+				echo '<td>' . esc_html( $type_l ) . '</td>';
+				echo '<td style="display:flex;align-items:center;gap:8px">';
+				$thumb = get_the_post_thumbnail( $lpid, array( 40, 40 ), array( 'style' => 'width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0' ) );
+				if ( $thumb ) {
+					echo $thumb; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				}
+				if ( $edit_url ) {
+					printf( '<a href="%s" target="_blank" rel="noopener">%s</a>', esc_url( $edit_url ), esc_html( get_the_title() ) );
+				} else {
+					echo esc_html( get_the_title() );
+				}
+				if ( $view_url ) {
+					echo ' <a href="' . esc_url( $view_url ) . '" target="_blank" rel="noopener">↗</a>';
+				}
+				echo '</td>';
+				echo '<td>' . esc_html( $lst_text ) . '</td>';
+				echo '<td>' . esc_html( get_post_time( 'Y-m-d', false ) ) . '</td>';
+				echo '<td>';
+				if ( $view_url ) {
+					printf( '<a href="%s" target="_blank" rel="noopener">%s</a>', esc_url( $view_url ), esc_html__( 'Открыть', 'umi-marketplace' ) );
+				} else {
+					echo '—';
+				}
+				echo '</td>';
+				echo '</tr>';
+			}
+			wp_reset_postdata();
+			echo '</tbody></table>';
+		} else {
+			echo '<p class="description">' . esc_html__( 'Объявлений нет.', 'umi-marketplace' ) . '</p>';
+		}
 		?>
 		<h2><?php esc_html_e( 'UMI — лимиты', 'umi-marketplace' ); ?></h2>
 		<table class="form-table" role="presentation">
