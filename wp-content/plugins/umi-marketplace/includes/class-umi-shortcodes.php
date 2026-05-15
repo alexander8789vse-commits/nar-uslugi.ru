@@ -2386,17 +2386,6 @@ class Umi_Shortcodes {
 					<?php if ( $excerpt ) : ?>
 					<div class="umi-listing-card__lead">
 						<?php echo wp_kses_post( wpautop( $excerpt ) ); ?>
-						<?php if ( is_user_logged_in() ) : ?>
-						<div class="umi-listing-card__admin-alert">
-							<button
-								class="umi-btn umi-btn--outline umi-alert-admin-btn"
-								data-listing-id="<?php echo (int) $id; ?>"
-								data-nonce="<?php echo esc_attr( wp_create_nonce( Umi_Ajax::NONCE_ALERT ) ); ?>"
-								data-ajax-url="<?php echo esc_attr( admin_url( 'admin-ajax.php' ) ); ?>"
-							>Привлечь администратора</button>
-							<span class="umi-alert-admin-msg" aria-live="polite"></span>
-						</div>
-						<?php endif; ?>
 					</div>
 					<?php endif; ?>
 					<?php if ( $author_profile_url ) : ?>
@@ -2786,6 +2775,16 @@ class Umi_Shortcodes {
 			<input type="hidden" name="umi_deal_return" value="<?php echo esc_url( $cab ); ?>" />
 			<button type="submit" class="umi-btn umi-btn--secondary umi-deal-cta__btn"><?php esc_html_e( 'Начать сделку', 'umi-marketplace' ); ?></button>
 		</form>
+		<div class="umi-listing-card__admin-alert">
+			<button
+				class="umi-btn umi-btn--outline umi-alert-admin-btn"
+				data-listing-id="<?php echo (int) $listing_id; ?>"
+				data-nonce="<?php echo esc_attr( wp_create_nonce( Umi_Ajax::NONCE_ALERT ) ); ?>"
+				data-ajax-url="<?php echo esc_attr( admin_url( 'admin-ajax.php' ) ); ?>"
+			><?php esc_html_e( 'Привлечь администратора', 'umi-marketplace' ); ?></button>
+			<span class="umi-alert-admin-msg" aria-live="polite"></span>
+			<span class="umi-alert-admin-fee"><?php esc_html_e( 'Платная услуга — 5% от суммы сделки', 'umi-marketplace' ); ?></span>
+		</div>
 		</div>
 		<?php
 		return (string) ob_get_clean();

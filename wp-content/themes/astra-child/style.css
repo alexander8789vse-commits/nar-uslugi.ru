@@ -1370,8 +1370,17 @@ label.umi-dispute-attach__btn.umi-btn:hover::before {
 }
 
 .umi-listing-card__admin-alert{
+	display: none;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.3rem;
+}
+.umi-listing-card__admin-alert--visible{
 	display: flex;
-    flex-direction: column;
+}
+.umi-alert-admin-fee{
+	font-size: 0.75rem;
+	color: #9ca3af;
 }
 
 .umi-listing-card__lead p {
@@ -2573,6 +2582,8 @@ a.umi-listing-author--link:focus-visible {
 
 .umi-listing-card--single .umi-deal-cta,
 .umi-deal-cta {
+	display: flex;
+	justify-content: space-between;
 	margin-top: 0.9rem;
 	padding-top: 0.9rem;
 	border-top: 1px solid color-mix(in srgb, var(--umi-slate) 6%, transparent);

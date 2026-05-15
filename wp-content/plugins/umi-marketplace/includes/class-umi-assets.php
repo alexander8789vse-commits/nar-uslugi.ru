@@ -84,6 +84,10 @@ class Umi_Assets {
 		return <<<'JS'
 (function () {
 	document.addEventListener('click', function (e) {
+		if (e.target.closest('.umi-listing-cta__btn')) {
+			var alertBox = document.querySelector('.umi-listing-card__admin-alert');
+			if (alertBox) alertBox.classList.add('umi-listing-card__admin-alert--visible');
+		}
 		var btn = e.target.closest('.umi-alert-admin-btn');
 		if (!btn || btn.disabled) return;
 		btn.disabled = true;
