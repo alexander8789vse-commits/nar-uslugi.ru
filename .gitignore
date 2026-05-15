@@ -1,0 +1,31 @@
+# WordPress
+wp-config.php
+wp-content/uploads/
+wp-content/cache/
+wp-content/upgrade/
+wp-content/backup-db/
+wp-content/advanced-cache.php
+wp-content/wp-cache-config.php
+бекап_разметки.zip
+.osp
+
+# Плагины и темы (если стандартные)
+# wp-content/plugins/
+# wp-content/themes/
+
+# Зависимости
+node_modules/
+vendor/
+
+# Логи
+*.log
+error_log
+
+# Системные
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Конфиги с паролями
+.env
+wp-config-local.php
