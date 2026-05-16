@@ -424,6 +424,7 @@ JS;
   .umi-modal__box { max-height: 94vh; border-radius: 12px 12px 0 0; }
   .umi-modal { align-items: flex-end; padding: 0; }
 }
+.umi-field-hint { display: block; margin-top: 4px; font-size: 12px; color: #888; }
 ';
 	}
 }

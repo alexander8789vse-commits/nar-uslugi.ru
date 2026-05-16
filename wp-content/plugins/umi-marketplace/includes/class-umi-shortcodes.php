@@ -1502,6 +1502,11 @@ class Umi_Shortcodes {
 			}
 		}
 
+		$old_login   = isset( $login ) ? esc_attr( $login ) : '';
+		$old_email   = isset( $email ) ? esc_attr( $email ) : '';
+		$old_display = isset( $display ) ? esc_attr( $display ) : '';
+		$old_phone   = isset( $phone ) ? esc_attr( $phone ) : '';
+
 		ob_start();
 		if ( $err ) {
 			echo '<p class="umi-error">' . esc_html( $err ) . '</p>';
@@ -1511,23 +1516,24 @@ class Umi_Shortcodes {
 			<?php wp_nonce_field( 'umi_register', 'umi_reg_nonce' ); ?>
 			<p>
 				<label class="umi-label"><?php esc_html_e( 'Логин', 'umi-marketplace' ); ?></label>
-				<input type="text" name="user_login" class="umi-input" required autocomplete="username" />
+				<input type="text" name="user_login" class="umi-input" required autocomplete="username" value="<?php echo $old_login; ?>" />
 			</p>
 			<p>
 				<label class="umi-label"><?php esc_html_e( 'Email', 'umi-marketplace' ); ?></label>
-				<input type="email" name="user_email" class="umi-input" required autocomplete="email" />
+				<input type="email" name="user_email" class="umi-input" required autocomplete="email" value="<?php echo $old_email; ?>" />
 			</p>
 			<p>
 				<label class="umi-label"><?php esc_html_e( 'Имя', 'umi-marketplace' ); ?></label>
-				<input type="text" name="display_name" class="umi-input" required />
+				<input type="text" name="display_name" class="umi-input" required value="<?php echo $old_display; ?>" />
 			</p>
 			<p>
 				<label class="umi-label"><?php esc_html_e( 'Телефон', 'umi-marketplace' ); ?></label>
-				<input type="text" name="umi_phone" class="umi-input" required />
+				<input type="text" name="umi_phone" class="umi-input" required value="<?php echo $old_phone; ?>" />
 			</p>
 			<p>
 				<label class="umi-label"><?php esc_html_e( 'Пароль', 'umi-marketplace' ); ?></label>
 				<input type="password" name="user_pass" class="umi-input" required autocomplete="new-password" />
+				<small class="umi-field-hint"><?php esc_html_e( 'от 8 символов', 'umi-marketplace' ); ?></small>
 			</p>
 			<button type="submit" class="umi-btn"><?php esc_html_e( 'Зарегистрироваться', 'umi-marketplace' ); ?></button>
 		</form>
