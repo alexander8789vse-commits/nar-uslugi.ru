@@ -35,7 +35,7 @@ class Umi_Balance {
 	 * @param string $amount Decimal string.
 	 */
 	public static function set( $user_id, $amount ) {
-		update_user_meta( $user_id, self::META_KEY, self::normalize( $amount ) );
+		update_user_meta( $user_id, self::META_KEY, (string) max( 0, (int) self::normalize( $amount ) ) );
 	}
 
 	/**
@@ -55,7 +55,7 @@ class Umi_Balance {
 	}
 
 	/**
-	 * Целые доли (внутри и в выводе без дробной части).
+	 * Целые доли (внутри и в выводе без дробной части). Допускает отрицательные значения (дельты).
 	 *
 	 * @param string|float $n Value.
 	 * @return string
@@ -68,6 +68,6 @@ class Umi_Balance {
 		if ( ! is_numeric( $n ) ) {
 			return '0';
 		}
-		return (string) max( 0, (int) round( (float) $n ) );
+		return (string) (int) round( (float) $n );
 	}
 }
