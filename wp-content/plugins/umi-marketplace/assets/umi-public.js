@@ -481,5 +481,79 @@
     cabinetThreadDeleteInit();
     favoritesInit();
     shareInit();
+    phoneMaskInit();
   });
+
+  function phoneMaskInit() {
+    document.querySelectorAll('input[name="umi_phone"]').forEach(function (el) {
+      el.setAttribute('placeholder', '+7 (___) ___-__-__');
+      el.setAttribute('maxlength', '18');
+
+      function applyMask(raw) {
+        var digits = raw.replace(/\D/g, '');
+        if (digits.length > 0 && (digits[0] === '7' || digits[0] === '8')) {
+          digits = digits.slice(1);
+        }
+        digits = digits.slice(0, 10);
+        var out = '+7';
+        if (digits.length > 0) out += ' (' + digits.slice(0, 3);
+        if (digits.length >= 3) out += ') ' + digits.slice(3, 6);
+        if (digits.length >= 6) out += '-' + digits.slice(6, 8);
+        if (digits.length >= 8) out += '-' + digits.slice(8, 10);
+        return out;
+      }
+
+      el.addEventListener('input', function (e) {
+        var pos = el.selectionStart;
+        var old = el.value;
+        el.value = applyMask(el.value);
+        // сдвиг курсора: если пользователь стёр символ — не прыгаем в конец
+        var diff = el.value.length - old.length;
+        var newPos = Math.max(0, pos + diff);
+        el.setSelectionRange(newPos, newPos);
+      });
+
+      el.addEventListener('keydown', function (e) {
+        // Backspace на статичном символе маски — пропускаем цифру перед ним
+        if (e.key === 'Backspace') {
+          var pos = el.selectionStart;
+          if (el.selectionStart === el.selectionEnd) {
+            var ch = el.value[pos - 1];
+            if (ch && /\D/.test(ch)) {
+              e.preventDefault();
+              var digits = el.value.replace(/\D/g, '');
+              if (digits.length > 0 && (digits[0] === '7' || digits[0] === '8')) digits = digits.slice(1);
+              digits = digits.slice(0, -1);
+              el.value = applyMask(digits);
+              var np = el.value.length;
+              el.setSelectionRange(np, np);
+            }
+          }
+        }
+      });
+
+      el.addEventListener('focus', function () {
+        if (!el.value) el.value = '+7 (';
+      });
+
+      el.addEventListener('blur', function () {
+        if (el.value === '+7 (') el.value = '';
+      });
+
+      // Валидация при сабмите: 11 цифр обязательно
+      var form = el.closest('form');
+      if (form) {
+        form.addEventListener('submit', function () {
+          var digits = el.value.replace(/\D/g, '');
+          if (digits.length > 0 && (digits[0] === '7' || digits[0] === '8')) digits = digits.slice(1);
+          if (digits.length !== 10) {
+            el.setCustomValidity('Введите номер телефона полностью');
+          } else {
+            el.setCustomValidity('');
+          }
+        });
+        el.addEventListener('input', function () { el.setCustomValidity(''); });
+      }
+    });
+  }
 })();

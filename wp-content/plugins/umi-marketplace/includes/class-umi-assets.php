@@ -133,9 +133,9 @@ JS;
 			UMI_MP_VERSION,
 			true
 		);
+		wp_enqueue_script( 'umi-mp-chat' );
 
 		if ( is_user_logged_in() ) {
-			wp_enqueue_script( 'umi-mp-chat' );
 			wp_localize_script(
 				'umi-mp-chat',
 				'umiMp',
@@ -183,6 +183,8 @@ JS;
   .umi-cabinet-layout { grid-template-columns: 1fr; }
   .umi-cabinet--v2 .umi-cabinet-sidebar { order: 0; }
   .umi-cabinet--v2 .umi-cabinet-main { order: 1; }
+  .umi-cabinet-main-header { flex-wrap: wrap; }
+  .umi-cabinet-main-header .umi-cabinet-heading { min-width: 0; }
 }
 .umi-cabinet-flash { margin-bottom: 16px; }
 
@@ -198,6 +200,11 @@ JS;
 .umi-btn--sm { padding: 6px 14px; font-size: 13px; }
 
 /* ── Listings table ───────────────────────────────────── */
+.umi-cabinet-main { min-width: 0; overflow-x: auto; }
+.umi-cabinet-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
 .umi-cabinet-table {
   width: 100%;
   border-collapse: collapse;
@@ -423,6 +430,7 @@ JS;
 @media (max-width: 480px) {
   .umi-modal__box { max-height: 94vh; border-radius: 12px 12px 0 0; }
   .umi-modal { align-items: flex-end; padding: 0; }
+  .umi-modal__head { margin-top: 40px; }
 }
 .umi-field-hint { display: block; margin-top: 4px; font-size: 12px; color: #888; }
 ';
