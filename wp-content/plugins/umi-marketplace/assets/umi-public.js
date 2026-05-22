@@ -532,6 +532,9 @@
         }
       });
 
+      // Форматируем уже сохранённое значение при загрузке страницы
+      if (el.value) el.value = applyMask(el.value);
+
       el.addEventListener('focus', function () {
         if (!el.value) el.value = '+7 (';
       });

@@ -182,6 +182,26 @@ class Umi_Shortcodes {
 				return;
 			}
 			self::process_cabinet_delete();
+		} elseif ( 'profile_info' === $action ) {
+			if ( ! isset( $_POST['umi_cabinet_nonce_profile_info'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['umi_cabinet_nonce_profile_info'] ) ), 'umi_cabinet_profile_info' ) ) {
+				return;
+			}
+			$return  = isset( $_POST['umi_cabinet_return'] ) ? esc_url_raw( wp_unslash( $_POST['umi_cabinet_return'] ) ) : home_url( '/' );
+			$return  = wp_validate_redirect( $return, home_url( '/' ) );
+			$uid     = get_current_user_id();
+			$dname      = isset( $_POST['umi_display_name'] ) ? sanitize_text_field( wp_unslash( $_POST['umi_display_name'] ) ) : '';
+			$phone      = isset( $_POST['umi_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['umi_phone'] ) ) : '';
+			$city       = isset( $_POST['umi_profile_city'] ) ? sanitize_text_field( wp_unslash( $_POST['umi_profile_city'] ) ) : '';
+			$profession = isset( $_POST['umi_profile_profession'] ) ? sanitize_text_field( wp_unslash( $_POST['umi_profile_profession'] ) ) : '';
+			if ( $dname ) {
+				wp_update_user( array( 'ID' => $uid, 'display_name' => $dname ) );
+			}
+			update_user_meta( $uid, 'umi_phone', $phone );
+			update_user_meta( $uid, 'umi_profile_city', $city );
+			update_user_meta( $uid, 'umi_profile_profession', $profession );
+			set_transient( 'umi_cabinet_flash_' . $uid, array( 'success' => __( 'Профиль обновлён.', 'umi-marketplace' ) ), 60 );
+			wp_safe_redirect( $return . '#umi-cabinet' );
+			exit;
 		} elseif ( 'profile' === $action ) {
 			if ( ! isset( $_POST['umi_cabinet_nonce_profile'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['umi_cabinet_nonce_profile'] ) ), 'umi_cabinet_profile' ) ) {
 				return;
@@ -928,7 +948,26 @@ class Umi_Shortcodes {
 		$out .= '<p><button type="submit" class="umi-btn umi-btn--primary">' . esc_html__( 'Сохранить', 'umi-marketplace' ) . '</button></p></form>';
 		$out .= $mc;
 
-		// 2. Deals modal.
+		// 2. Profile info modal (name + phone).
+		$out .= $mo( 'umi-modal-profile-info', 'umi-modal-profile-info-title', __( 'Редактировать профиль', 'umi-marketplace' ) );
+		$out .= '<form method="post" class="umi-form" action="' . esc_url( $return_url ) . '#umi-cabinet">';
+		$out .= '<input type="hidden" name="umi_cabinet" value="1" />';
+		$out .= '<input type="hidden" name="umi_cabinet_action" value="profile_info" />';
+		$out .= '<input type="hidden" name="umi_cabinet_return" value="' . esc_url( $return_url ) . '" />';
+		$out .= wp_nonce_field( 'umi_cabinet_profile_info', 'umi_cabinet_nonce_profile_info', true, false );
+		$out .= '<div class="umi-form-row"><label class="umi-label" for="umi_pi_name">' . esc_html__( 'Отображаемое имя', 'umi-marketplace' ) . '</label>';
+		$out .= '<input type="text" id="umi_pi_name" name="umi_display_name" class="umi-input" style="width:100%;box-sizing:border-box;margin-top:0.35rem" value="' . esc_attr( $user->display_name ) . '" required /></div>';
+		$out .= '<div class="umi-form-row"><label class="umi-label" for="umi_pi_phone">' . esc_html__( 'Телефон', 'umi-marketplace' ) . '</label>';
+		$out .= '<input type="text" id="umi_pi_phone" name="umi_phone" class="umi-input" style="width:100%;box-sizing:border-box;margin-top:0.35rem" value="' . esc_attr( (string) get_user_meta( $uid, 'umi_phone', true ) ) . '" /></div>';
+		$out .= '<div class="umi-form-row"><label class="umi-label" for="umi_pi_city">' . esc_html__( 'Город', 'umi-marketplace' ) . '</label>';
+		$out .= '<input type="text" id="umi_pi_city" name="umi_profile_city" class="umi-input" style="width:100%;box-sizing:border-box;margin-top:0.35rem" value="' . esc_attr( (string) get_user_meta( $uid, 'umi_profile_city', true ) ) . '" /></div>';
+		$out .= '<div class="umi-form-row"><label class="umi-label" for="umi_pi_profession">' . esc_html__( 'Профессия', 'umi-marketplace' ) . '</label>';
+		$out .= '<input type="text" id="umi_pi_profession" name="umi_profile_profession" class="umi-input" style="width:100%;box-sizing:border-box;margin-top:0.35rem" value="' . esc_attr( (string) get_user_meta( $uid, 'umi_profile_profession', true ) ) . '" /></div>';
+		$out .= '<p><button type="submit" class="umi-btn umi-btn--primary">' . esc_html__( 'Сохранить', 'umi-marketplace' ) . '</button></p>';
+		$out .= '</form>';
+		$out .= $mc;
+
+		// 3. Deals modal.
 		$out .= $mo( 'umi-modal-deals', 'umi-modal-deals-title', __( 'Мои сделки', 'umi-marketplace' ) );
 		$out .= self::render_deals_inner( $return_url );
 		$out .= $mc;
@@ -1085,6 +1124,10 @@ class Umi_Shortcodes {
 		$out .= '<span class="umi-cabinet-nav-item__label">' . esc_html__( 'Чат с администратором', 'umi-marketplace' ) . '</span>';
 		$out .= '</button>';
 
+		$out .= '<button type="button" class="umi-cabinet-nav-item" data-umi-open-modal="umi-modal-profile-info">';
+		$out .= '<span class="umi-cabinet-nav-item__label">' . esc_html__( 'Изменить данные', 'umi-marketplace' ) . '</span>';
+		$out .= '</button>';
+
 		$out .= '</nav>';  // end .umi-cabinet-sidebar-nav
 		$out .= '</aside>'; // end .umi-cabinet-sidebar
 
@@ -1115,7 +1158,7 @@ class Umi_Shortcodes {
 					'pending' => __( 'На модерации', 'umi-marketplace' ),
 					'draft'   => __( 'Черновик', 'umi-marketplace' ),
 				);
-				$out .= '<table class="umi-cabinet-table">';
+				$out .= '<div class="umi-cabinet-table-wrap"><table class="umi-cabinet-table">';
 				$out .= '<thead><tr>';
 				$out .= '<th>' . esc_html__( 'Тип', 'umi-marketplace' ) . '</th>';
 				$out .= '<th>' . esc_html__( 'Название', 'umi-marketplace' ) . '</th>';
@@ -1158,7 +1201,7 @@ class Umi_Shortcodes {
 					$out .= '<button type="submit" class="umi-cabinet-icon-btn umi-cabinet-icon-btn--delete" title="' . esc_attr__( 'Удалить', 'umi-marketplace' ) . '" aria-label="' . esc_attr__( 'Удалить', 'umi-marketplace' ) . '">' . $svg_trash . '</button></form>';
 					$out .= '</div></td></tr>';
 				}
-				$out .= '</tbody></table>';
+				$out .= '</tbody></table></div>';
 				wp_reset_postdata();
 			} else {
 				$out .= '<p class="umi-cabinet-empty">' . esc_html__( 'Пока нет объявлений. Нажмите «+ Добавить», чтобы разместить первое.', 'umi-marketplace' ) . '</p>';
