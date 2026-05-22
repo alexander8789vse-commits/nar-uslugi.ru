@@ -13,7 +13,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'UMI_MP_VERSION', '1.0.5' );
+define( 'UMI_MP_VERSION', '1.0.6' );
 define( 'UMI_MP_PATH', plugin_dir_path( __FILE__ ) );
 define( 'UMI_MP_URL', plugin_dir_url( __FILE__ ) );
 define( 'UMI_MP_BASENAME', plugin_basename( __FILE__ ) );
