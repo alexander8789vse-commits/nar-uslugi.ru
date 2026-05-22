@@ -24,15 +24,11 @@ Version: 1.0.2
  * После правок в Cursor заливайте этот файл на хост целиком ИЛИ переносите сюда актуальную копию с сервера, чтобы не потерять блоки с героем, карточками и т.д.
  */
 
-@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap");
-
-body, body * {
-	font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-}
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap");
 
 /* Минимальные токены на случай, если чего-то не хватает из родительской темы */
 :root {
-	--umi-font: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+	--umi-font: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 	--umi-primary: #1E42EE;
 	--umi-primary-dark: #1535cc;
 	--umi-accent: #77BBC1;
@@ -102,11 +98,11 @@ label.umi-dispute-attach__btn.umi-btn {
 	text-align: center;
 	text-decoration: none;
 	cursor: pointer;
-	border: 1px solid var(--umi-primary);
+	border: 1px solid color-mix(in srgb, #fff 14%, var(--umi-primary) 86%);
 	border-radius: var(--umi-radius);
 	background: var(--umi-btn-base);
 	overflow: hidden;
-	transition: background 0.3s, color 0.3s, border-color 0.3s, transform 0.2s;
+	transition: border-color 0.25s, transform 0.2s;
 }
 
 .umi-btn::before,
@@ -141,9 +137,7 @@ a.umi-btn.umi-btn--outline:hover,
 .umi-btn-ghost:hover,
 label.umi-cabinet-file-label.umi-btn:hover,
 label.umi-dispute-attach__btn.umi-btn:hover {
-	background: #ffffff;
-	color: var(--umi-primary);
-	border-color: var(--umi-primary);
+	border-color: color-mix(in srgb, #fff 20%, var(--umi-accent) 60%);
 }
 
 .umi-btn:hover::before,
