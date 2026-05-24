@@ -100,7 +100,7 @@ label.umi-dispute-attach__btn.umi-btn {
 	text-align: center;
 	text-decoration: none;
 	cursor: pointer;
-	border: 1px solid color-mix(in srgb, #fff 14%, var(--umi-primary) 86%);
+	border: 2px solid #D97757;
 	border-radius: var(--umi-radius);
 	background: var(--umi-btn-base);
 	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.18), 0 4px 16px color-mix(in srgb, var(--umi-primary) 38%, transparent);
@@ -140,8 +140,10 @@ a.umi-btn.umi-btn--outline:hover,
 .umi-btn-ghost:hover,
 label.umi-cabinet-file-label.umi-btn:hover,
 label.umi-dispute-attach__btn.umi-btn:hover {
-	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 8px 24px color-mix(in srgb, var(--umi-primary) 50%, transparent);
-	border-color: color-mix(in srgb, #fff 20%, var(--umi-accent) 60%);
+	box-shadow: none;
+	border-color: #D97757;
+	background: transparent;
+	color: #D97757;
 }
 
 .umi-btn:hover::before,
@@ -336,6 +338,7 @@ label.umi-dispute-attach__btn.umi-btn:hover::before {
 	align-items: center;
 	max-width: min(9.25rem, 42vw);
 	min-width: 0;
+	overflow: visible !important;
 }
 
 .umi-header__logo {
@@ -413,6 +416,49 @@ label.umi-dispute-attach__btn.umi-btn:hover::before {
 	outline-offset: 2px;
 }
 
+/* Nav-ссылки — полный вид кнопки (как .umi-btn) */
+.umi-header__nav a.umi-header__link {
+	--umi-btn-sheen-mid: rgba(130, 200, 255, 0.28);
+	font-weight: 600;
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	padding: 0.58rem 1.2rem;
+	font-size: 0.88rem;
+	line-height: 1.25;
+	color: #fff;
+	border: 2px solid #D97757;
+	border-radius: var(--umi-radius);
+	background: var(--umi-btn-base);
+	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.18), 0 4px 16px color-mix(in srgb, var(--umi-primary) 38%, transparent);
+	overflow: hidden;
+	transition: box-shadow 0.3s ease, border-color 0.25s, transform 0.2s;
+}
+
+.umi-header__nav a.umi-header__link::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: linear-gradient(105deg, transparent, var(--umi-btn-sheen-mid), transparent 55%);
+	background-size: 200% 100%;
+	background-position: -60% 0;
+	opacity: 0;
+}
+
+.umi-header__nav a.umi-header__link:hover {
+	box-shadow: none;
+	border-color: #D97757;
+	background: #fff;
+	color: #D97757;
+}
+
+.umi-header__nav a.umi-header__link:hover::before {
+	animation: umi-btn-sheen 0.7s ease-out 1;
+}
+
 .umi-header__link--ghost {
 	color: var(--umi-h-text-muted);
 	font-size: 0.88rem;
@@ -431,6 +477,10 @@ label.umi-dispute-attach__btn.umi-btn:hover::before {
 	font-size: 0.88rem;
 	padding: 0.45em 1.05em;
 	border-radius: 999px;
+}
+
+.umi-header-root a.umi-btn.umi-btn--outline:hover {
+	background: #fff;
 }
 
 /* Тулбар: доли + чат + выход/вход */
@@ -713,6 +763,33 @@ label.umi-dispute-attach__btn.umi-btn:hover::before {
 .umi-header__drawer-footer .umi-header__link--ghost {
 	text-align: center;
 	padding: 0.5rem;
+}
+
+@media (min-width: 901px) {
+	.umi-header__nav:not(.umi-header__nav--drawer) {
+		gap: 15px;
+	}
+
+	.umi-header {
+		overflow: visible;
+	}
+
+	.umi-header__logo {
+		transform: scale(2);
+		transform-origin: top;
+	}
+
+	.elementor img {
+		border-radius: 50%;
+	}
+
+	.ast-plain-container.ast-no-sidebar #primary {
+		margin-top: 15px;
+	}
+}
+
+body:not(.logged-in) .umi-header__nav a[href*="kabinet-prodavcza"] {
+	display: none;
 }
 
 /* Десктоп: навигация + тулбар в полоске. Мобилка: бургер, тулбар в выезж. меню */
@@ -1603,7 +1680,7 @@ label.umi-dispute-attach__btn.umi-btn:hover::before {
 	flex-direction: column;
 	background: var(--umi-bg);
 	border-radius: var(--umi-radius-lg);
-	border: 1px solid color-mix(in srgb, var(--umi-slate) 9%, transparent);
+	border: 2px solid #D97757;
 	box-shadow: var(--umi-shadow-sm);
 	overflow: hidden;
 	transition: box-shadow 0.25s, transform 0.2s;
@@ -2602,7 +2679,7 @@ form.umi-filter--row {
 	padding: 1.05rem 1.2rem;
 	margin: 0 0 1.5rem;
 	background: var(--umi-bg);
-	border: 1px solid color-mix(in srgb, var(--umi-slate) 10%, transparent);
+	border: 2px solid #D97757;
 	border-radius: var(--umi-radius-lg);
 	box-shadow: var(--umi-shadow-sm);
 }
@@ -2923,4 +3000,12 @@ form.umi-filter--row .umi-seg__item:has(input:checked) {
 	.umi-header__fav--guest {
 		transition: none;
 	}
+}
+
+
+#content{
+	background: #a8a8ce!important;
+}
+.umi-header{
+	padding: 10px 0;
 }
