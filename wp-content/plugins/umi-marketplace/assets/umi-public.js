@@ -200,9 +200,22 @@
       var hidden = wrap.querySelector('input.umi-cabinet-attachment-id');
       var preview = wrap.querySelector('.umi-cabinet-upload-preview');
       var previewImg = preview ? preview.querySelector('img') : null;
-      var clearBtn = wrap.querySelector('.umi-cabinet-upload-clear');
       if (!fileInput || !hidden) return;
+      var profileForm = wrap.closest('.umi-cabinet-profile-form');
+      var chooseBtn = profileForm ? profileForm.querySelector('[data-umi-avatar-choose]') : null;
+      var saveWrap = profileForm ? profileForm.querySelector('[data-umi-avatar-save]') : null;
+      var clearBtn = saveWrap ? saveWrap.querySelector('.umi-cabinet-upload-clear') : wrap.querySelector('.umi-cabinet-upload-clear');
+      function showEl(el, on, displayVal) {
+        if (!el) return;
+        if (on) { el.removeAttribute('hidden'); el.style.display = displayVal || ''; }
+        else { el.setAttribute('hidden', 'hidden'); el.style.display = 'none'; }
+      }
+      function showAvatarPicked(on) {
+        showEl(chooseBtn, !on);
+        showEl(saveWrap, on, 'flex');
+      }
       function showClear(on) {
+        if (profileForm) { showAvatarPicked(on); return; }
         if (!clearBtn) return;
         if (on) {
           clearBtn.removeAttribute('hidden');
@@ -224,9 +237,7 @@
           showClear(false);
         }
       }
-      var clearFlag = wrap.closest('.umi-cabinet-profile-form')
-        ? wrap.closest('.umi-cabinet-profile-form').querySelector('.umi-profile-clear-flag')
-        : null;
+      var clearFlag = profileForm ? profileForm.querySelector('.umi-profile-clear-flag') : null;
       function clear() {
         hidden.value = '';
         setPreview('');
@@ -387,7 +398,12 @@
     }
     document.addEventListener('click', function (e) {
       var openBtn = e.target.closest('[data-umi-open-modal]');
-      if (openBtn) { openModal(openBtn.getAttribute('data-umi-open-modal')); return; }
+      if (openBtn) {
+        var parentModal = openBtn.closest('.umi-modal');
+        if (parentModal) closeModal(parentModal);
+        openModal(openBtn.getAttribute('data-umi-open-modal'));
+        return;
+      }
       var closeEl = e.target.closest('[data-umi-close-modal]');
       if (closeEl) { closeModal(closeEl.closest('.umi-modal')); return; }
     });

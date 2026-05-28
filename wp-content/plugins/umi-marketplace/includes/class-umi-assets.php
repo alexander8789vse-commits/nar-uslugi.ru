@@ -290,13 +290,14 @@ JS;
   display: inline-flex;
   background: none;
   border: none;
-  cursor: pointer;
+  cursor: default;
   padding: 0;
   border-radius: 50%;
   flex-shrink: 0;
-  transition: opacity .15s;
 }
-.umi-cabinet-avatar-btn:hover { opacity: .85; }
+.umi-cabinet-avatar-btn:hover { opacity: 1; }
+.umi-cabinet-avatar-btn--clickable { cursor: pointer; transition: opacity .15s; }
+.umi-cabinet-avatar-btn--clickable:hover { opacity: .85; }
 .umi-cabinet-avatar-btn .umi-cabinet-avatar {
   width: 56px; height: 56px;
   border-radius: 50%;
