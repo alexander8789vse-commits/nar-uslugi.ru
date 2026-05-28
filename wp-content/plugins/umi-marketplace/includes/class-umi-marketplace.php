@@ -87,6 +87,7 @@ class Umi_Marketplace {
 	public function init() {
 		Umi_Roles::ensure_seller_publish_caps();
 		Umi_Roles::ensure_upload_caps();
+		add_filter( 'pre_get_avatar_data', array( 'Umi_Admin', 'filter_avatar_data' ), 10, 2 );
 		Umi_Access::hooks();
 		Umi_Email_Verification::hooks();
 		Umi_Capabilities::hooks();

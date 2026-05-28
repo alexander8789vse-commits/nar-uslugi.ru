@@ -705,6 +705,48 @@ class Umi_Admin {
 	}
 
 	/**
+	 * Подменяет Gravatar на кастомный аватар из umi_profile_photo.
+	 *
+	 * @param array           $args   Avatar data.
+	 * @param int|string|object $id_or_email User ID, email, or WP_User/WP_Comment.
+	 * @return array
+	 */
+	public static function filter_avatar_data( $args, $id_or_email ) {
+		$user_id = 0;
+		if ( is_numeric( $id_or_email ) ) {
+			$user_id = (int) $id_or_email;
+		} elseif ( is_string( $id_or_email ) && is_email( $id_or_email ) ) {
+			$u = get_user_by( 'email', $id_or_email );
+			if ( $u ) {
+				$user_id = (int) $u->ID;
+			}
+		} elseif ( $id_or_email instanceof WP_User ) {
+			$user_id = (int) $id_or_email->ID;
+		} elseif ( $id_or_email instanceof WP_Comment && ! empty( $id_or_email->user_id ) ) {
+			$user_id = (int) $id_or_email->user_id;
+		}
+
+		if ( $user_id < 1 ) {
+			return $args;
+		}
+
+		$photo_id = (int) get_user_meta( $user_id, 'umi_profile_photo', true );
+		if ( $photo_id < 1 ) {
+			return $args;
+		}
+
+		$size = isset( $args['size'] ) ? (int) $args['size'] : 96;
+		$url  = wp_get_attachment_image_url( $photo_id, array( $size * 2, $size * 2 ) );
+		if ( ! $url ) {
+			return $args;
+		}
+
+		$args['url']          = $url;
+		$args['found_avatar'] = true;
+		return $args;
+	}
+
+	/**
 	 * Колонка «Доли» в списке пользователей.
 	 *
 	 * @param string[] $cols Columns.
@@ -1093,6 +1135,7 @@ class Umi_Admin {
 		if ( $user_id > 0 && isset( $_POST['umi_user_ledger_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['umi_user_ledger_nonce'] ) ), 'umi_user_ledger_' . $user_id ) ) {
 			$add     = isset( $_POST['umi_ledger_add'] ) ? (float) str_replace( ',', '.', (string) wp_unslash( $_POST['umi_ledger_add'] ) ) : 0;
 			$sub     = isset( $_POST['umi_ledger_sub'] ) ? (float) str_replace( ',', '.', (string) wp_unslash( $_POST['umi_ledger_sub'] ) ) : 0;
+			error_log( '[UMI DEBUG] save_user_fields: add=' . $add . ' sub=' . $sub . ' post_sub=' . ( isset( $_POST['umi_ledger_sub'] ) ? var_export( $_POST['umi_ledger_sub'], true ) : 'NOT_SET' ) );
 			$comment = isset( $_POST['umi_ledger_comment'] ) ? sanitize_textarea_field( wp_unslash( $_POST['umi_ledger_comment'] ) ) : '';
 			$admin_id = (int) get_current_user_id();
 			$parts    = array();
