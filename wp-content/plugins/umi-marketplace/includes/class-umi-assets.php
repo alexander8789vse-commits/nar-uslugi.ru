@@ -434,6 +434,57 @@ JS;
   .umi-modal__head { margin-top: 40px; }
 }
 .umi-field-hint { display: block; margin-top: 4px; font-size: 12px; color: #888; }
+.umi-boost-status {
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.umi-boost-status--active {
+  color: #b07d00;
+  font-weight: 600;
+  font-size: 14px;
+  background: #fffbe6;
+  border: 1.5px solid #ffe58f;
+  border-radius: 8px;
+  padding: 8px 14px;
+}
+.umi-boost-status__icon { font-size: 16px; }
+.umi-boost-status__hint { font-size: 12px; color: #999; }
+.umi-btn--boost {
+  background: linear-gradient(135deg, #f5a623 0%, #e8860a 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.umi-btn--boost:hover:not(:disabled) { opacity: .88; }
+.umi-btn--boost:disabled { opacity: .45; cursor: not-allowed; }
+.umi-boost-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 16px;
+}
+.umi-boost-dialog {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 10px 48px rgba(0,0,0,.2);
+  padding: 28px 28px 22px;
+  max-width: 400px;
+  width: 100%;
+}
+.umi-boost-dialog__text { margin: 0 0 20px; font-size: 16px; line-height: 1.5; }
+.umi-boost-dialog__actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
 ';
 	}
 }

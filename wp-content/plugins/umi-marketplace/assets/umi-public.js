@@ -575,4 +575,74 @@
       }
     });
   }
+  // --- Boost listing ---
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.umi-btn--boost');
+    if (!btn || btn.disabled) return;
+
+    var postId  = btn.dataset.boostPostId;
+    var nonce   = btn.dataset.boostNonce;
+    var balance = parseInt(btn.dataset.boostBalance, 10);
+
+    if (balance < 500) {
+      alert('Недостаточно долей (нужно 500, у вас ' + balance + ').');
+      return;
+    }
+
+    var overlay = document.createElement('div');
+    overlay.className = 'umi-boost-overlay';
+    overlay.innerHTML =
+      '<div class="umi-boost-dialog">' +
+        '<p class="umi-boost-dialog__text">Списать <strong>500 долей</strong> и сделать объявление первым в списке?</p>' +
+        '<div class="umi-boost-dialog__actions">' +
+          '<button type="button" class="umi-btn umi-btn--primary umi-boost-confirm">Списать 500 долей</button>' +
+          '<button type="button" class="umi-btn umi-boost-cancel">Отмена</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('.umi-boost-cancel').addEventListener('click', function () {
+      overlay.remove();
+    });
+    overlay.addEventListener('click', function (ev) {
+      if (ev.target === overlay) overlay.remove();
+    });
+
+    overlay.querySelector('.umi-boost-confirm').addEventListener('click', function () {
+      var confirmBtn = this;
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Списываем…';
+
+      var fd = new FormData();
+      fd.append('action', 'umi_mp_boost_listing');
+      fd.append('nonce', nonce);
+      fd.append('post_id', postId);
+
+      fetch(window.umiMp ? window.umiMp.ajaxUrl : '/wp-admin/admin-ajax.php', {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: fd
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          overlay.remove();
+          if (data.success) {
+            btn.closest('.umi-boost-status').outerHTML =
+              '<div class="umi-boost-status umi-boost-status--active">' +
+                '<span class="umi-boost-status__icon">★</span>' +
+                'Объявление продвигается — первым в списке' +
+              '</div>';
+          } else {
+            var msg = data.data && data.data.message === 'not_enough'
+              ? 'Недостаточно долей.'
+              : 'Ошибка. Попробуйте ещё раз.';
+            alert(msg);
+          }
+        })
+        .catch(function () {
+          overlay.remove();
+          alert('Ошибка сети. Попробуйте ещё раз.');
+        });
+    });
+  });
 })();

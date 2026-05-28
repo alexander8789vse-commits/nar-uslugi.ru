@@ -181,6 +181,7 @@ class Umi_Ledger {
 			'deal_refund'    => __( 'Возврат по сделке', 'umi-marketplace' ),
 			'admin_credit'   => __( 'Начисление админом', 'umi-marketplace' ),
 			'admin_debit'    => __( 'Списание админом', 'umi-marketplace' ),
+			'boost'          => __( 'Продвижение объявления', 'umi-marketplace' ),
 		);
 		return isset( $map[ $t ] ) ? $map[ $t ] : $t;
 	}

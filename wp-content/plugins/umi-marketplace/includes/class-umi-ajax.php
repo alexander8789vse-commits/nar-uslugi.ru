@@ -30,6 +30,7 @@ class Umi_Ajax {
 		add_action( 'wp_ajax_umi_mp_favorite', array( __CLASS__, 'favorite_toggle' ) );
 		add_action( 'wp_ajax_umi_mp_alert_admin',        array( __CLASS__, 'alert_admin' ) );
 		add_action( 'wp_ajax_nopriv_umi_mp_alert_admin', array( __CLASS__, 'alert_admin' ) );
+		add_action( 'wp_ajax_umi_mp_boost_listing', array( __CLASS__, 'boost_listing' ) );
 	}
 
 	/**
@@ -320,6 +321,42 @@ class Umi_Ajax {
 		} else {
 			wp_send_json_error( array( 'message' => 'mail_failed' ), 500 );
 		}
+	}
+
+	/**
+	 * Продвижение объявления наверх списка за 500 долей.
+	 */
+	public static function boost_listing() {
+		self::verify();
+		$uid     = (int) get_current_user_id();
+		$post_id = isset( $_POST['post_id'] ) ? (int) $_POST['post_id'] : 0;
+		if ( $post_id < 1 ) {
+			wp_send_json_error( array( 'message' => 'bad_post' ), 400 );
+		}
+		$post = get_post( $post_id );
+		if ( ! $post || ! in_array( $post->post_type, array( Umi_Cpt::SERVICE, Umi_Cpt::PRODUCT ), true ) ) {
+			wp_send_json_error( array( 'message' => 'bad_post' ), 400 );
+		}
+		if ( (int) $post->post_author !== $uid ) {
+			wp_send_json_error( array( 'message' => 'forbidden' ), 403 );
+		}
+		$bal = (int) Umi_Balance::get( $uid );
+		if ( $bal < 500 ) {
+			wp_send_json_error( array( 'message' => 'not_enough', 'balance' => $bal ), 400 );
+		}
+		$r = Umi_Ledger::record(
+			array(
+				'user_id'      => $uid,
+				'type'         => 'boost',
+				'shares_delta' => '-500',
+				'comment'      => sprintf( 'Продвижение объявления #%d', $post_id ),
+			)
+		);
+		if ( ! $r ) {
+			wp_send_json_error( array( 'message' => 'ledger_fail' ), 500 );
+		}
+		update_post_meta( $post_id, '_umi_boosted', '1' );
+		wp_send_json_success( array( 'balance' => (int) Umi_Balance::get( $uid ) ) );
 	}
 
 	/**

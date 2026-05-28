@@ -470,6 +470,31 @@ class Umi_Shortcodes {
 	}
 
 	/**
+	 * WP_Query с сортировкой: boosted-объявления первыми, затем по дате.
+	 * Использует LEFT JOIN чтобы посты без мета тоже попадали в выборку.
+	 *
+	 * @param array $args WP_Query args.
+	 * @return WP_Query
+	 */
+	private static function query_with_boost_sort( $args ) {
+		add_filter( 'posts_clauses', array( __CLASS__, '_boost_sort_clauses' ) );
+		$query = new WP_Query( $args );
+		remove_filter( 'posts_clauses', array( __CLASS__, '_boost_sort_clauses' ) );
+		return $query;
+	}
+
+	/**
+	 * @param array $clauses SQL clauses.
+	 * @return array
+	 */
+	public static function _boost_sort_clauses( $clauses ) {
+		global $wpdb;
+		$clauses['join']   .= " LEFT JOIN {$wpdb->postmeta} AS _umi_boost ON (_umi_boost.post_id = {$wpdb->posts}.ID AND _umi_boost.meta_key = '_umi_boosted')";
+		$clauses['orderby'] = "COALESCE(_umi_boost.meta_value, '') DESC, {$wpdb->posts}.post_date DESC";
+		return $clauses;
+	}
+
+	/**
 	 * Services list + filter form.
 	 *
 	 * @param array $atts Atts.
@@ -542,7 +567,7 @@ class Umi_Shortcodes {
 			}
 		}
 
-		$query = new WP_Query( $args );
+		$query = self::query_with_boost_sort( $args );
 
 		$str_intent_offer = __( 'Представлены объявления, в которых люди предлагают услуги.', 'umi-marketplace' );
 		$str_intent_seek  = __( 'Представлены объявления людей, которые ищут услугу или сотрудника.', 'umi-marketplace' );
@@ -705,7 +730,7 @@ class Umi_Shortcodes {
 			$args['meta_query'] = array_merge( array( 'relation' => 'AND' ), $meta_parts );
 		}
 
-		$query = new WP_Query( $args );
+		$query = self::query_with_boost_sort( $args );
 
 		ob_start();
 		?>
@@ -1416,8 +1441,29 @@ class Umi_Shortcodes {
 		while ( count( $gall ) < 3 ) {
 			$gall[] = 0;
 		}
+		$boosted  = '1' === (string) get_post_meta( $post->ID, '_umi_boosted', true );
+		$user_bal = (int) Umi_Balance::get( get_current_user_id() );
 		ob_start();
 		?>
+		<?php if ( $boosted ) : ?>
+		<div class="umi-boost-status umi-boost-status--active">
+			<span class="umi-boost-status__icon">★</span>
+			<?php esc_html_e( 'Объявление продвигается — первым в списке', 'umi-marketplace' ); ?>
+		</div>
+		<?php else : ?>
+		<div class="umi-boost-status">
+			<button type="button" class="umi-btn umi-btn--boost"
+				data-boost-post-id="<?php echo (int) $post->ID; ?>"
+				data-boost-nonce="<?php echo esc_attr( wp_create_nonce( Umi_Ajax::NONCE_ACTION ) ); ?>"
+				data-boost-balance="<?php echo (int) $user_bal; ?>"
+				<?php if ( $user_bal < 500 ) echo 'disabled title="' . esc_attr__( 'Недостаточно долей (нужно 500)', 'umi-marketplace' ) . '"'; ?>>
+				<?php esc_html_e( 'Сделать первым в списке объявлений — 500 долей', 'umi-marketplace' ); ?>
+			</button>
+			<?php if ( $user_bal < 500 ) : ?>
+			<span class="umi-boost-status__hint"><?php echo esc_html( sprintf( __( 'Нужно 500 долей, у вас %d', 'umi-marketplace' ), $user_bal ) ); ?></span>
+			<?php endif; ?>
+		</div>
+		<?php endif; ?>
 		<form method="post" class="umi-form umi-cabinet-form" action="<?php echo esc_url( $return_url ); ?>#umi-cabinet" id="umi-cabinet-edit-form">
 			<input type="hidden" name="umi_cabinet" value="1" />
 			<input type="hidden" name="umi_cabinet_action" value="<?php echo esc_attr( $action_value ); ?>" />
@@ -2296,10 +2342,11 @@ class Umi_Shortcodes {
 		}
 		$permalink = get_permalink( $post_id );
 		$title     = get_the_title( $post_id );
+		$boosted   = '1' === (string) get_post_meta( $post_id, '_umi_boosted', true );
 
 		ob_start();
 		?>
-		<article class="umi-card umi-listing-card umi-listing-card--compact">
+		<article class="umi-card umi-listing-card umi-listing-card--compact<?php echo $boosted ? ' umi-listing-card--boosted' : ''; ?>">
 			<div class="umi-listing-card__media-wrap">
 				<a class="umi-listing-card__media" href="<?php echo esc_url( $permalink ); ?>">
 					<?php if ( $first ) : ?>
