@@ -1227,7 +1227,12 @@ class Umi_Shortcodes {
 						$out .= '<span>' . $title_text . '</span>';
 					}
 					$out .= '</div></td>';
-					$out .= '<td><span class="umi-cabinet-table-status umi-cabinet-table-status--' . esc_attr( $lst ) . '">' . esc_html( $lst_text ) . '</span></td>';
+					$mod_note = (string) get_post_meta( $lpid, '_umi_moderation_note', true );
+					$out .= '<td><span class="umi-cabinet-table-status umi-cabinet-table-status--' . esc_attr( $lst ) . '">' . esc_html( $lst_text ) . '</span>';
+					if ( '' !== $mod_note ) {
+						$out .= '<div class="umi-cabinet-moderation-note"><span class="umi-cabinet-moderation-note__label">' . esc_html__( 'Комментарий модератора:', 'umi-marketplace' ) . '</span> ' . esc_html( $mod_note ) . '</div>';
+					}
+					$out .= '</td>';
 					$svg_edit   = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/></svg>';
 					$svg_trash  = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M6 19c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="currentColor"/></svg>';
 					$out .= '<td class="umi-cabinet-table-actions"><div class="umi-cabinet-table-actions-inner">';

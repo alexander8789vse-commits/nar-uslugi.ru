@@ -35,6 +35,9 @@ class Umi_Admin {
 		add_filter( 'manage_users_custom_column', array( __CLASS__, 'users_column_content' ), 10, 3 );
 		add_action( 'add_meta_boxes', array( __CLASS__, 'add_deal_meta' ) );
 		add_action( 'save_post_umi_deal', array( __CLASS__, 'save_deal_meta' ), 10, 2 );
+		add_action( 'add_meta_boxes', array( __CLASS__, 'add_listing_meta' ) );
+		add_action( 'save_post_' . Umi_Cpt::SERVICE, array( __CLASS__, 'save_moderation_note' ), 10, 2 );
+		add_action( 'save_post_' . Umi_Cpt::PRODUCT, array( __CLASS__, 'save_moderation_note' ), 10, 2 );
 		add_filter( 'manage_' . Umi_Cpt::DEAL . '_posts_columns', array( __CLASS__, 'deal_list_columns' ) );
 		add_action( 'manage_' . Umi_Cpt::DEAL . '_posts_custom_column', array( __CLASS__, 'deal_list_column' ), 10, 2 );
 		add_action( 'restrict_manage_posts', array( __CLASS__, 'deal_list_filter' ) );
@@ -125,6 +128,54 @@ class Umi_Admin {
 				),
 			)
 		);
+	}
+
+	/**
+	 * Метабокс «Комментарий модератора» для объявлений.
+	 */
+	public static function add_listing_meta() {
+		foreach ( array( Umi_Cpt::SERVICE, Umi_Cpt::PRODUCT ) as $pt ) {
+			add_meta_box(
+				'umi_moderation_note',
+				__( 'Комментарий модератора', 'umi-marketplace' ),
+				array( __CLASS__, 'render_moderation_note' ),
+				$pt,
+				'side',
+				'high'
+			);
+		}
+	}
+
+	/**
+	 * @param WP_Post $post Post.
+	 */
+	public static function render_moderation_note( $post ) {
+		wp_nonce_field( 'umi_moderation_note_save', 'umi_moderation_note_nonce' );
+		$note = (string) get_post_meta( (int) $post->ID, '_umi_moderation_note', true );
+		echo '<p class="description" style="margin-bottom:8px">' . esc_html__( 'Сообщение видно продавцу в его кабинете рядом с объявлением.', 'umi-marketplace' ) . '</p>';
+		echo '<textarea name="umi_moderation_note" class="widefat" rows="4" placeholder="' . esc_attr__( 'Что нужно исправить…', 'umi-marketplace' ) . '">' . esc_textarea( $note ) . '</textarea>';
+	}
+
+	/**
+	 * @param int     $post_id ID.
+	 * @param WP_Post $post Post.
+	 */
+	public static function save_moderation_note( $post_id, $post ) {
+		if ( ! isset( $_POST['umi_moderation_note_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['umi_moderation_note_nonce'] ) ), 'umi_moderation_note_save' ) ) {
+			return;
+		}
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+		if ( ! current_user_can( 'edit_post', (int) $post_id ) ) {
+			return;
+		}
+		$note = isset( $_POST['umi_moderation_note'] ) ? sanitize_textarea_field( wp_unslash( $_POST['umi_moderation_note'] ) ) : '';
+		if ( '' === $note ) {
+			delete_post_meta( (int) $post_id, '_umi_moderation_note' );
+		} else {
+			update_post_meta( (int) $post_id, '_umi_moderation_note', $note );
+		}
 	}
 
 	/**

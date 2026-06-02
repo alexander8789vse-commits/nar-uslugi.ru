@@ -1,4 +1,4 @@
-/**
+﻿/**
 Theme Name: Astra Child
 Author: Brainstorm Force
 Author URI: http://wpastra.com/about/
@@ -84,7 +84,8 @@ a.umi-btn,
 .umi-listing-card__btn,
 .umi-btn-ghost,
 label.umi-cabinet-file-label.umi-btn,
-label.umi-dispute-attach__btn.umi-btn {
+label.umi-dispute-attach__btn.umi-btn,
+button.umi-cabinet-upload-clear {
 	--umi-btn-sheen-mid: rgba(130, 200, 255, 0.28);
 	font-family: var(--umi-font);
 	font-weight: 600;
@@ -118,7 +119,8 @@ a.umi-btn.umi-btn--outline::before,
 .umi-listing-card__btn::before,
 .umi-btn-ghost::before,
 label.umi-cabinet-file-label.umi-btn::before,
-label.umi-dispute-attach__btn.umi-btn::before {
+label.umi-dispute-attach__btn.umi-btn::before,
+button.umi-cabinet-upload-clear::before {
 	content: "";
 	position: absolute;
 	inset: 0;
@@ -139,7 +141,8 @@ a.umi-btn.umi-btn--outline:hover,
 .umi-listing-card__btn:hover,
 .umi-btn-ghost:hover,
 label.umi-cabinet-file-label.umi-btn:hover,
-label.umi-dispute-attach__btn.umi-btn:hover {
+label.umi-dispute-attach__btn.umi-btn:hover,
+button.umi-cabinet-upload-clear:hover {
 	box-shadow: none;
 	border-color: #D97757;
 	background: transparent;
@@ -156,7 +159,8 @@ a.umi-btn.umi-btn--outline:hover::before,
 .umi-listing-card__btn:hover::before,
 .umi-btn-ghost:hover::before,
 label.umi-cabinet-file-label.umi-btn:hover::before,
-label.umi-dispute-attach__btn.umi-btn:hover::before {
+label.umi-dispute-attach__btn.umi-btn:hover::before,
+button.umi-cabinet-upload-clear:hover::before {
 	animation: umi-btn-sheen 0.7s ease-out 1;
 }
 
@@ -181,7 +185,8 @@ label.umi-dispute-attach__btn.umi-btn:hover::before {
 	.umi-listing-card__btn:hover::before,
 	.umi-btn-ghost:hover::before,
 	label.umi-cabinet-file-label.umi-btn:hover::before,
-	label.umi-dispute-attach__btn.umi-btn:hover::before {
+	label.umi-dispute-attach__btn.umi-btn:hover::before,
+	button.umi-cabinet-upload-clear:hover::before {
 		animation: none;
 	}
 	.umi-btn:hover,

@@ -246,6 +246,17 @@ JS;
 .umi-cabinet-table-status--publish { color: #1a7f3c; }
 .umi-cabinet-table-status--pending { color: #b06c00; }
 .umi-cabinet-table-status--draft   { color: #999; }
+.umi-cabinet-moderation-note {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #7a3a00;
+  background: #fff8ec;
+  border-left: 3px solid #e07800;
+  padding: 4px 8px;
+  border-radius: 0 4px 4px 0;
+  line-height: 1.4;
+}
+.umi-cabinet-moderation-note__label { font-weight: 600; }
 .umi-cabinet-table-actions { white-space: nowrap; }
 .umi-cabinet-table-actions-inner { display: flex; justify-content: space-around; align-items: center; }
 .umi-cabinet-table-actions .umi-cabinet-list-delete { display: inline; }
