@@ -2755,7 +2755,26 @@ class Umi_Shortcodes {
 			$btns += (int) self::echo_deal_action_form( $return_url, $deal_id, 'complete', __( 'Завершить сделку', 'umi-marketplace' ), 'umi-btn umi-btn--primary' );
 		}
 		if ( in_array( $status, array( Umi_Deals::STATUS_NEGOTIATED, Umi_Deals::STATUS_PAID_SHARES, Umi_Deals::STATUS_PAID_RUB ), true ) && ( $is_buyer || $is_seller ) ) {
-			$btns += (int) self::echo_deal_action_form( $return_url, $deal_id, 'open_dispute', __( 'Открыть спор', 'umi-marketplace' ), 'umi-link umi-deals__dispute' );
+			if ( ! Umi_Reviews::exists( $deal_id, $uid, $other_id ) ) {
+				?>
+				<form method="post" class="umi-deals__review-form" action="<?php echo esc_url( $return_url ); ?>#umi-deals">
+					<?php wp_nonce_field( 'umi_deal_review', 'umi_deal_review_nonce' ); ?>
+					<?php wp_nonce_field( 'umi_deal_action', 'umi_deal_nonce' ); ?>
+					<input type="hidden" name="umi_deal_form" value="1" />
+					<input type="hidden" name="umi_deal_sub" value="review" />
+					<input type="hidden" name="umi_review_deal_id" value="<?php echo (int) $deal_id; ?>" />
+					<input type="hidden" name="umi_review_to" value="<?php echo (int) $other_id; ?>" />
+					<input type="hidden" name="umi_review_rating" value="0" />
+					<input type="hidden" name="umi_deal_return" value="<?php echo esc_url( $return_url ); ?>" />
+					<p class="umi-deals__dispute-review-label"><strong><?php esc_html_e( 'Оставить отзыв', 'umi-marketplace' ); ?></strong></p>
+					<textarea class="umi-input umi-deals__review-textarea" name="umi_review_content" rows="3" placeholder="<?php esc_attr_e( 'Ваш комментарий…', 'umi-marketplace' ); ?>"></textarea>
+					<p class="umi-deals__review-footer">
+						<button type="submit" class="umi-btn umi-btn--secondary"><?php esc_html_e( 'Сохранить отзыв', 'umi-marketplace' ); ?></button>
+					</p>
+				</form>
+				<?php
+			}
+			$btns += (int) self::echo_deal_action_form( $return_url, $deal_id, 'open_dispute', __( 'Открыть спор', 'umi-marketplace' ), 'umi-btn umi-btn--primary umi-deals__dispute' );
 		}
 		if ( Umi_Deals::STATUS_DISPUTE === $status && ( $is_buyer || $is_seller || $is_admin ) ) {
 			$dthread = Umi_Chat::get_dispute_thread_id( $deal_id );
@@ -2824,9 +2843,10 @@ class Umi_Shortcodes {
 	 * @param string     $action_name Action slug for Umi_Deals::do_action.
 	 * @param string     $label Button label.
 	 * @param string     $class Button classes.
+	 * @param string     $extra_html HTML выводится перед кнопкой (уже заэскейплен).
 	 * @return int 1 (echoed form).
 	 */
-	private static function echo_deal_action_form( $return_url, $deal_id, $action_name, $label, $class = 'umi-btn' ) {
+	private static function echo_deal_action_form( $return_url, $deal_id, $action_name, $label, $class = 'umi-btn', $extra_html = '' ) {
 		?>
 		<form method="post" class="umi-deals__action" action="<?php echo esc_url( $return_url ); ?>#umi-deals">
 			<?php wp_nonce_field( 'umi_deal_action', 'umi_deal_nonce' ); ?>
@@ -2835,6 +2855,7 @@ class Umi_Shortcodes {
 			<input type="hidden" name="umi_deal_id" value="<?php echo (int) $deal_id; ?>" />
 			<input type="hidden" name="umi_deal_action_name" value="<?php echo esc_attr( $action_name ); ?>" />
 			<input type="hidden" name="umi_deal_return" value="<?php echo esc_url( $return_url ); ?>" />
+			<?php if ( $extra_html ) echo $extra_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			<p><button type="submit" class="<?php echo esc_attr( $class ); ?>"><?php echo esc_html( $label ); ?></button></p>
 		</form>
 		<?php

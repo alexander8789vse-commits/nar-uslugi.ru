@@ -1867,6 +1867,23 @@ a.umi-listing-author--link:focus-visible {
 	}
 }
 
+/* ——— Продвинутая карточка [umi-listing-card--boosted] ——— */
+.umi-listing-card--boosted {
+	position: relative;
+	overflow: hidden;
+}
+
+.umi-listing-card--boosted::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: var(--umi-radius-lg);
+	background: url("https://xn--80agceqqkchtpxc1i.xn--p1ai/wp-content/uploads/2026/06/fire_bg.png") center bottom / cover no-repeat;
+	pointer-events: none;
+	z-index: 1;
+	opacity: 0.35;
+}
+
 /* ——— Публичный профиль продавца [umi_seller_profile] ——— */
 .umi-seller-profile {
 	font-family: var(--umi-font);
@@ -2647,8 +2664,31 @@ a.umi-listing-author--link:focus-visible {
 	color: var(--umi-muted);
 }
 
-.umi-deals__dispute.umi-link {
-	margin-top: 0.25rem;
+.umi-deals__review-form {
+	margin: 1rem 0 0.5rem;
+}
+
+.umi-deals__dispute-review-label {
+	margin: 0 0 0.35rem;
+}
+
+.umi-deals__review-textarea {
+	width: 100%;
+	display: block;
+}
+
+.umi-deals__review-footer {
+	margin: 0.5rem 0 0;
+}
+
+.umi-deals__action:has(.umi-deals__dispute) {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 0.75rem;
+}
+
+.umi-deals__action:has(.umi-deals__dispute) p {
+	margin: 0;
 }
 
 .umi-deals__review {

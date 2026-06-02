@@ -77,9 +77,14 @@ class Umi_Reviews {
 			return new WP_Error( 'umi_review_bad', __( 'Некорректные данные отзыва.', 'umi-marketplace' ) );
 		}
 
-		$status = Umi_Deals::get_status( $deal_id );
-		if ( Umi_Deals::STATUS_COMPLETED !== $status ) {
-			return new WP_Error( 'umi_review_not_done', __( 'Отзыв доступен только после завершённой сделки.', 'umi-marketplace' ) );
+		$status          = Umi_Deals::get_status( $deal_id );
+		$allowed_statuses = array(
+			Umi_Deals::STATUS_COMPLETED,
+			Umi_Deals::STATUS_PAID_SHARES,
+			Umi_Deals::STATUS_NEGOTIATED,
+		);
+		if ( ! in_array( $status, $allowed_statuses, true ) ) {
+			return new WP_Error( 'umi_review_not_done', __( 'Отзыв недоступен на текущем этапе сделки.', 'umi-marketplace' ) );
 		}
 
 		$buyer_id  = (int) get_post_meta( $deal_id, '_umi_buyer_id', true );
@@ -92,7 +97,10 @@ class Umi_Reviews {
 			return new WP_Error( 'umi_review_dup', __( 'Отзыв уже оставлен.', 'umi-marketplace' ) );
 		}
 
-		$rating = max( 1, min( 5, (int) $args['rating'] ) );
+		$rating = (int) $args['rating'];
+		if ( $rating > 0 ) {
+			$rating = max( 1, min( 5, $rating ) );
+		}
 
 		$post_id = wp_insert_post(
 			array(
