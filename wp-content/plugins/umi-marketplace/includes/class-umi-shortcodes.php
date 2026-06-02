@@ -62,6 +62,7 @@ class Umi_Shortcodes {
 		add_shortcode( 'umi_deals', array( __CLASS__, 'deals' ) );
 		add_shortcode( 'umi_favorites', array( __CLASS__, 'favorites' ) );
 		add_action( 'wp', array( __CLASS__, 'maybe_seller_profile_seo' ), 5 );
+		add_action( 'wp_footer', array( __CLASS__, 'header_add_modal_footer' ) );
 	}
 
 	/**
@@ -2989,5 +2990,70 @@ class Umi_Shortcodes {
 		}
 		$out .= '</div></div>';
 		return $out;
+	}
+
+	/**
+	 * Кнопка «+ Добавить» в хедере (wp_footer) и модалка добавления объявления.
+	 * Только для авторизованных пользователей, на всех страницах сайта.
+	 */
+	public static function header_add_modal_footer() {
+		if ( ! is_user_logged_in() ) {
+			return;
+		}
+
+		$uid      = get_current_user_id();
+		$user     = get_userdata( $uid );
+		$is_seller = $user && in_array( 'umi_seller', (array) $user->roles, true );
+		$cab_url  = (string) apply_filters( 'umi_header_url_cabinet', home_url( '/kabinet/' ) );
+		$modal_id = 'umi-modal-header-add';
+		$title_id = 'umi-modal-header-add-title';
+
+		echo '<div class="umi-modal" id="' . esc_attr( $modal_id ) . '" hidden role="dialog" aria-modal="true" aria-labelledby="' . esc_attr( $title_id ) . '">';
+		echo '<div class="umi-modal__backdrop" data-umi-close-modal></div>';
+		echo '<div class="umi-modal__box">';
+		echo '<div class="umi-modal__head">';
+		echo '<h2 class="umi-modal__title" id="' . esc_attr( $title_id ) . '">' . esc_html__( 'Добавить объявление', 'umi-marketplace' ) . '</h2>';
+		echo '<button type="button" class="umi-modal__close" data-umi-close-modal aria-label="' . esc_attr__( 'Закрыть', 'umi-marketplace' ) . '">&#x2715;</button>';
+		echo '</div>';
+		echo '<div class="umi-modal__body">';
+
+		if ( $is_seller ) {
+			echo '<h3 class="umi-cabinet-subh">' . esc_html__( 'Новая услуга', 'umi-marketplace' ) . '</h3>';
+			echo self::render_cabinet_add_form( Umi_Cpt::SERVICE, $cab_url );
+		} else {
+			echo '<p class="umi-notice">' . esc_html__( 'Чтобы добавлять услуги и товары, оформите профиль продавца.', 'umi-marketplace' ) . '</p>';
+			echo self::become_seller();
+		}
+
+		echo '</div></div></div>';
+		?>
+		<script>
+		(function () {
+			var modalId = '<?php echo esc_js( $modal_id ); ?>';
+			var label   = '<?php echo esc_js( __( 'Добавить объявление', 'umi-marketplace' ) ); ?>';
+			var hint    = '<?php echo esc_js( __( 'Добавить услугу', 'umi-marketplace' ) ); ?>';
+
+			function makeBtn() {
+				var btn = document.createElement('button');
+				btn.type = 'button';
+				btn.className = 'umi-btn umi-btn--primary umi-header__add-btn';
+				btn.setAttribute('data-umi-open-modal', modalId);
+				btn.setAttribute('aria-label', label);
+				btn.setAttribute('title', hint);
+				btn.textContent = '+';
+				btn.style.fontSize = '30px';
+				btn.style.lineHeight = '1';
+				btn.style.padding = '0.2rem 0.7rem';
+				return btn;
+			}
+
+			var desk = document.getElementById('umi-header-nav-desk');
+			if (desk) desk.insertBefore(makeBtn(), desk.firstChild);
+
+			var mob = document.querySelector('.umi-header__nav--drawer');
+			if (mob) mob.insertBefore(makeBtn(), mob.firstChild);
+		})();
+		</script>
+		<?php
 	}
 }
