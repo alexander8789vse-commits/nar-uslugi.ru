@@ -1874,19 +1874,95 @@ a.umi-listing-author--link:focus-visible {
 
 /* ——— Продвинутая карточка [umi-listing-card--boosted] ——— */
 .umi-listing-card--boosted {
-	position: relative;
-	overflow: hidden;
+  position: relative;
+  border: 1.5px solid #ff4400;
+  border-radius: 12px;
+  animation:
+    fire-glow   1.6s ease-in-out infinite,
+    border-fire 2.0s ease-in-out infinite;
+}
+
+.umi-listing-card--boosted::before {
+  content: '';
+  position: absolute;
+  inset: -14px;
+  border-radius: 22px;
+  background: conic-gradient(
+    from 0deg,
+    #ff0000, #ff4400, #ff8800, #ffcc00,
+    #ff8800, #ff4400, #ff0000, #ff4400,
+    #ffaa00, #ff2200, #ff6600, #ff0000
+  );
+  background-size: 300% 300%;
+  animation: pseudo-top 2.5s ease-in-out infinite,
+             pseudo-inner 1.8s ease-in-out infinite;
+  z-index: -1;
 }
 
 .umi-listing-card--boosted::after {
-	content: "";
-	position: absolute;
-	inset: 0;
-	border-radius: var(--umi-radius-lg);
-	background: url("https://xn--80agceqqkchtpxc1i.xn--p1ai/wp-content/uploads/2026/06/fire_bg.png") center bottom / cover no-repeat;
-	pointer-events: none;
-	z-index: 1;
-	opacity: 0.35;
+  content: '';
+  position: absolute;
+  inset: -28px;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    #ff4400cc 0%,
+    #ff220077 30%,
+    #ff110033 60%,
+    transparent 80%
+  );
+  z-index: -2;
+  border-radius: 40px;
+  animation: hue-shift 2.2s ease-in-out infinite;
+}
+
+@keyframes fire-glow {
+  0%,100% {
+    box-shadow:
+      0 0 8px 2px #ff4400,
+      0 0 20px 6px #ff6600cc,
+      0 0 40px 12px #ff220066,
+      0 0 70px 20px #ff110033;
+  }
+  33% {
+    box-shadow:
+      0 0 12px 4px #ffaa00,
+      0 0 28px 8px #ff6600cc,
+      0 0 50px 16px #ff330077,
+      0 0 80px 24px #ff110044;
+  }
+  66% {
+    box-shadow:
+      0 0 6px 2px #ff2200,
+      0 0 18px 5px #ff4400bb,
+      0 0 36px 10px #ff110055,
+      0 0 60px 18px #cc000022;
+  }
+}
+
+@keyframes border-fire {
+  0%,100% { border-color: #ff4400; }
+  25%      { border-color: #ffaa00; }
+  50%      { border-color: #ff2200; }
+  75%      { border-color: #ff7700; }
+}
+
+@keyframes pseudo-top {
+  0%   { background-position: 0% 50%;   filter: blur(6px) brightness(1.2); }
+  25%  { background-position: 40% 30%;  filter: blur(8px) brightness(1.5); }
+  50%  { background-position: 100% 50%; filter: blur(5px) brightness(1.1); }
+  75%  { background-position: 60% 70%;  filter: blur(9px) brightness(1.4); }
+  100% { background-position: 0% 50%;   filter: blur(6px) brightness(1.2); }
+}
+
+@keyframes pseudo-inner {
+  0%,100% { opacity: 0.5; transform: scaleX(0.95) translateY(0px);  }
+  50%      { opacity: 0.9; transform: scaleX(1.02) translateY(-2px); }
+}
+
+@keyframes hue-shift {
+  0%,100% { filter: hue-rotate(0deg)   blur(14px) brightness(1.1); }
+  33%      { filter: hue-rotate(20deg)  blur(18px) brightness(1.4); }
+  66%      { filter: hue-rotate(-10deg) blur(12px) brightness(1.0); }
 }
 
 /* ——— Публичный профиль продавца [umi_seller_profile] ——— */
