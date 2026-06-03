@@ -2560,31 +2560,42 @@ a.umi-listing-author--link:focus-visible {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.5rem;
-	margin: 0.75rem 0 0;
+	margin: 0 0 1.25rem;
 }
 
 #umi-cabinet .umi-cabinet-tab {
 	cursor: pointer;
 	font-family: var(--umi-font);
-	font-size: 0.9rem;
 	font-weight: 600;
-	border: 1px solid color-mix(in srgb, var(--umi-primary) 25%, transparent);
-	background: var(--umi-bg-soft);
-	color: var(--umi-slate);
-	padding: 0.5rem 1rem;
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	padding: 0.58rem 1.2rem;
+	font-size: 0.88rem;
+	line-height: 1.25;
+	color: #fff;
+	border: 2px solid #D97757;
 	border-radius: var(--umi-radius);
-	transition: background 0.15s, color 0.15s, border-color 0.15s;
+	background: var(--umi-btn-base);
+	box-shadow: 0 1px 0 rgba(0,0,0,.18), 0 4px 16px color-mix(in srgb, var(--umi-primary) 38%, transparent);
+	overflow: hidden;
+	transition: box-shadow 0.3s ease, border-color 0.25s, background 0.25s, color 0.2s;
 }
 
 #umi-cabinet .umi-cabinet-tab:hover {
-	border-color: color-mix(in srgb, var(--umi-primary) 45%, transparent);
-	color: var(--umi-primary);
+	box-shadow: none;
+	border-color: #D97757;
+	background: #fff;
+	color: #D97757;
 }
 
 #umi-cabinet .umi-cabinet-tab.is-active {
-	background: linear-gradient(135deg, var(--umi-primary) 0%, var(--umi-primary-dark) 100%);
-	color: #fff;
-	border-color: transparent;
+	box-shadow: none;
+	border-color: #D97757;
+	background: #fff;
+	color: #D97757;
 }
 
 #umi-cabinet .umi-cabinet-panels .umi-cabinet-panel:not(.is-active):not([hidden]) {

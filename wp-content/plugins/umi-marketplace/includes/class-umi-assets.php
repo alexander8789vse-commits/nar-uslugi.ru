@@ -496,6 +496,54 @@ JS;
 }
 .umi-boost-dialog__text { margin: 0 0 20px; font-size: 16px; line-height: 1.5; }
 .umi-boost-dialog__actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
+
+/* ── Tabs inside modals (outside #umi-cabinet) ────────── */
+.umi-modal .umi-cabinet-panels { margin-top: 0.25rem; }
+.umi-modal .umi-cabinet-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+}
+.umi-modal .umi-cabinet-nav .umi-cabinet-tab {
+  font-family: inherit;
+  font-weight: 600;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.58rem 1.2rem;
+  font-size: 0.88rem;
+  line-height: 1.25;
+  color: #fff;
+  border: 2px solid #D97757;
+  border-radius: var(--umi-radius, 10px);
+  background: var(--umi-btn-base, linear-gradient(168deg,#0a2544 0%,#1b5394 44%,#123a6b 100%));
+  box-shadow: 0 1px 0 rgba(0,0,0,.18), 0 4px 16px color-mix(in srgb,var(--umi-primary,#1b5394) 38%,transparent);
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow .3s ease, border-color .25s, background .25s, color .2s;
+}
+.umi-modal .umi-cabinet-nav .umi-cabinet-tab:hover {
+  box-shadow: none;
+  border-color: #D97757;
+  background: #fff;
+  color: #D97757;
+}
+.umi-modal .umi-cabinet-nav .umi-cabinet-tab.is-active {
+  box-shadow: none;
+  border-color: #D97757;
+  background: #fff;
+  color: #D97757;
+}
+.umi-modal .umi-cabinet-nav .umi-cabinet-tab:focus-visible {
+  outline: 2px solid rgba(56,189,248,.7);
+  outline-offset: 2px;
+}
+.umi-modal .umi-cabinet-panels .umi-cabinet-panel:not(.is-active):not([hidden]) { display: none; }
+.umi-modal .umi-cabinet-panels .umi-cabinet-panel.is-active { display: block; }
+.umi-modal .umi-cabinet-panels [hidden] { display: none !important; }
 ';
 	}
 }

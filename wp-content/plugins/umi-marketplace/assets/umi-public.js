@@ -273,21 +273,21 @@
   }
 
   function cabinetPanelsInit() {
-    var r = document.querySelector('#umi-cabinet [data-umi-cabinet-panels]');
-    if (!r) return;
-    var t = r.querySelectorAll('[data-umi-cabinet-tab]');
-    var p = r.querySelectorAll('[data-umi-cabinet-panel]');
-    t.forEach(function (b) {
-      b.addEventListener('click', function () {
-        var k = b.getAttribute('data-umi-cabinet-tab');
-        t.forEach(function (x) {
-          x.classList.toggle('is-active', x === b);
-          x.setAttribute('aria-selected', x === b ? 'true' : 'false');
-        });
-        p.forEach(function (el) {
-          var on = el.getAttribute('data-umi-cabinet-panel') === k;
-          el.classList.toggle('is-active', on);
-          el.toggleAttribute('hidden', !on);
+    document.querySelectorAll('[data-umi-cabinet-panels]').forEach(function (r) {
+      var t = r.querySelectorAll('[data-umi-cabinet-tab]');
+      var p = r.querySelectorAll('[data-umi-cabinet-panel]');
+      t.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var k = b.getAttribute('data-umi-cabinet-tab');
+          t.forEach(function (x) {
+            x.classList.toggle('is-active', x === b);
+            x.setAttribute('aria-selected', x === b ? 'true' : 'false');
+          });
+          p.forEach(function (el) {
+            var on = el.getAttribute('data-umi-cabinet-panel') === k;
+            el.classList.toggle('is-active', on);
+            el.toggleAttribute('hidden', !on);
+          });
         });
       });
     });

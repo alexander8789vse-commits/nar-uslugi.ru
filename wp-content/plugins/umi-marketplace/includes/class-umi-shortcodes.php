@@ -3023,8 +3023,22 @@ class Umi_Shortcodes {
 		echo '<div class="umi-modal__body">';
 
 		if ( $is_seller ) {
+			echo '<div class="umi-cabinet-panels" data-umi-cabinet-panels>';
+			echo '<nav class="umi-cabinet-nav" role="tablist" aria-label="' . esc_attr__( 'Добавить объявление', 'umi-marketplace' ) . '">';
+			echo '<button type="button" class="umi-cabinet-tab is-active" role="tab" id="tab-umi-hs" aria-selected="true" aria-controls="panel-umi-hs" data-umi-cabinet-tab="hs">' . esc_html__( 'Добавить услугу', 'umi-marketplace' ) . '</button>';
+			echo '<button type="button" class="umi-cabinet-tab" role="tab" id="tab-umi-hp" aria-selected="false" aria-controls="panel-umi-hp" data-umi-cabinet-tab="hp">' . esc_html__( 'Добавить товар', 'umi-marketplace' ) . '</button>';
+			echo '</nav>';
+			echo '<div class="umi-cabinet-panel is-active" id="panel-umi-hs" role="tabpanel" aria-labelledby="tab-umi-hs" data-umi-cabinet-panel="hs">';
 			echo '<h3 class="umi-cabinet-subh">' . esc_html__( 'Новая услуга', 'umi-marketplace' ) . '</h3>';
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			echo self::render_cabinet_add_form( Umi_Cpt::SERVICE, $cab_url );
+			echo '</div>';
+			echo '<div class="umi-cabinet-panel" id="panel-umi-hp" role="tabpanel" aria-labelledby="tab-umi-hp" hidden data-umi-cabinet-panel="hp">';
+			echo '<h3 class="umi-cabinet-subh">' . esc_html__( 'Новый товар', 'umi-marketplace' ) . '</h3>';
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			echo self::render_cabinet_add_form( Umi_Cpt::PRODUCT, $cab_url );
+			echo '</div>';
+			echo '</div>';
 		} else {
 			echo '<p class="umi-notice">' . esc_html__( 'Чтобы добавлять услуги и товары, оформите профиль продавца.', 'umi-marketplace' ) . '</p>';
 			echo self::become_seller();
@@ -3036,7 +3050,7 @@ class Umi_Shortcodes {
 		(function () {
 			var modalId = '<?php echo esc_js( $modal_id ); ?>';
 			var label   = '<?php echo esc_js( __( 'Добавить объявление', 'umi-marketplace' ) ); ?>';
-			var hint    = '<?php echo esc_js( __( 'Добавить услугу', 'umi-marketplace' ) ); ?>';
+			var hint    = '<?php echo esc_js( __( 'Разместить объявление', 'umi-marketplace' ) ); ?>';
 
 			function makeBtn() {
 				var btn = document.createElement('button');
