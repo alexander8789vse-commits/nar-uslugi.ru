@@ -414,6 +414,38 @@
     });
   }());
 
+  document.addEventListener('click', function (e) {
+    var toggleBtn = e.target.closest('[data-umi-avatar-inline-toggle]');
+    if (toggleBtn) {
+      var row = toggleBtn.closest('.umi-form-row');
+      if (!row) return;
+      var block = row.querySelector('.umi-avatar-inline');
+      if (!block) return;
+      toggleBtn.setAttribute('hidden', 'hidden');
+      toggleBtn.style.display = 'none';
+      block.removeAttribute('hidden');
+      block.style.display = '';
+      return;
+    }
+    var closeBtn = e.target.closest('[data-umi-avatar-inline-close]');
+    if (closeBtn) {
+      var block = closeBtn.closest('.umi-avatar-inline');
+      if (!block) return;
+      var saveWrap = block.querySelector('[data-umi-avatar-save]');
+      var chooseBtn = block.querySelector('[data-umi-avatar-choose]');
+      if (saveWrap && !saveWrap.hasAttribute('hidden')) {
+        saveWrap.setAttribute('hidden', 'hidden');
+        saveWrap.style.display = 'none';
+        if (chooseBtn) { chooseBtn.removeAttribute('hidden'); chooseBtn.style.display = ''; }
+      }
+      var row = block.closest('.umi-form-row');
+      var toggleBtn = row ? row.querySelector('[data-umi-avatar-inline-toggle]') : null;
+      block.setAttribute('hidden', 'hidden');
+      block.style.display = 'none';
+      if (toggleBtn) { toggleBtn.removeAttribute('hidden'); toggleBtn.style.display = ''; }
+    }
+  });
+
   function cabinetThreadDeleteInit() {
     if (!window.umiMp || !window.umiMp.nonce) return;
     document.querySelectorAll('[data-umi-delete-thread]').forEach(function (btn) {

@@ -956,37 +956,11 @@ class Umi_Shortcodes {
 		};
 		$mc = '</div></div></div>'; // close .umi-modal__body + .umi-modal__box + .umi-modal
 
-		// 1. Avatar modal.
-		$out .= $mo( 'umi-modal-avatar', 'umi-modal-avatar-title', __( 'Фото профиля', 'umi-marketplace' ) );
-		$out .= '<p class="umi-text-muted">' . esc_html__( 'Будет отображаться в кабинете. Можно заменить или убрать.', 'umi-marketplace' ) . '</p>';
-		$out .= '<form method="post" class="umi-form umi-cabinet-profile-form" action="' . esc_url( $return_url ) . '#umi-cabinet" enctype="multipart/form-data">';
-		$out .= '<input type="hidden" name="umi_cabinet" value="1" />';
-		$out .= '<input type="hidden" name="umi_cabinet_action" value="profile" />';
-		$out .= '<input type="hidden" name="umi_cabinet_return" value="' . esc_url( $return_url ) . '" />';
-		$out .= '<input type="hidden" name="umi_profile_photo_clear" value="0" class="umi-profile-clear-flag" />';
-		$out .= wp_nonce_field( 'umi_cabinet_profile', 'umi_cabinet_nonce_profile', true, false );
-		$out .= '<div class="umi-cabinet-upload umi-cabinet-profile-upload" data-umi-cabinet-upload>';
-		$out .= '<input type="hidden" class="umi-cabinet-attachment-id" name="umi_profile_photo_id" value="' . ( $photo_id > 0 ? (int) $photo_id : '' ) . '" id="umi_prof_hid" />';
-		$out .= '<div class="umi-cabinet-upload-preview"' . ( $photo_id ? '' : ' hidden' ) . '><img src="' . ( $ava_url ? esc_url( $ava_url ) : '' ) . '" alt="" width="200" height="200" style="object-fit:cover;border-radius:8px;max-width:100%;height:auto" /></div>';
-		$out .= '<p class="umi-cabinet-upload-actions">';
-		$out .= '<label class="umi-cabinet-file-label umi-btn umi-btn--secondary" data-umi-avatar-choose><input type="file" id="umi_prof_file" class="umi-cabinet-file" accept="image/jpeg,image/png,image/gif,image/webp" style="position:absolute;opacity:0;width:0;height:0" tabindex="-1" />';
-		$out .= '<span>' . esc_html__( 'Выбрать изображение', 'umi-marketplace' ) . '</span></label>';
-		$out .= '</p></div>';
-		$out .= '<div data-umi-avatar-save hidden style="display:none;justify-content:space-between;align-items:center;gap:8px">';
-		$out .= '<button type="submit" class="umi-btn umi-btn--primary">' . esc_html__( 'Сохранить', 'umi-marketplace' ) . '</button>';
-		$out .= '<button type="button" class="umi-cabinet-upload-clear umi-btn umi-btn--outline">' . esc_html__( 'Отмена', 'umi-marketplace' ) . '</button>';
-		$out .= '</div></form>';
-		$out .= $mc;
-
 		// 2. Profile info modal (name + phone).
 		$out .= $mo( 'umi-modal-profile-info', 'umi-modal-profile-info-title', __( 'Редактировать профиль', 'umi-marketplace' ) );
-		$out .= '<form method="post" class="umi-form" action="' . esc_url( $return_url ) . '#umi-cabinet">';
-		$out .= '<input type="hidden" name="umi_cabinet" value="1" />';
-		$out .= '<input type="hidden" name="umi_cabinet_action" value="profile_info" />';
-		$out .= '<input type="hidden" name="umi_cabinet_return" value="' . esc_url( $return_url ) . '" />';
-		$out .= wp_nonce_field( 'umi_cabinet_profile_info', 'umi_cabinet_nonce_profile_info', true, false );
+		// Avatar toggle row — kept outside the profile-info form to avoid nested <form> elements.
 		$out .= '<div class="umi-form-row" style="text-align:center;margin-bottom:1rem">';
-		$out .= '<button type="button" class="umi-cabinet-avatar-btn umi-cabinet-avatar-btn--clickable" data-umi-open-modal="umi-modal-avatar" aria-label="' . esc_attr__( 'Изменить фото профиля', 'umi-marketplace' ) . '">';
+		$out .= '<button type="button" class="umi-cabinet-avatar-btn umi-cabinet-avatar-btn--clickable" data-umi-avatar-inline-toggle aria-label="' . esc_attr__( 'Изменить фото профиля', 'umi-marketplace' ) . '">';
 		if ( $ava_url ) {
 			$out .= '<img class="umi-cabinet-avatar" src="' . esc_url( $ava_url ) . '" alt="" width="64" height="64" />';
 		} else {
@@ -995,7 +969,33 @@ class Umi_Shortcodes {
 		$out .= '<span class="umi-cabinet-avatar-badge" aria-hidden="true">';
 		$out .= '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/></svg>';
 		$out .= '</span></button>';
+		$out .= '<div class="umi-avatar-inline" hidden style="display:none;text-align:left;margin-top:0.5rem">';
+		$out .= '<form method="post" class="umi-form umi-cabinet-profile-form" action="' . esc_url( $return_url ) . '#umi-cabinet" enctype="multipart/form-data">';
+		$out .= '<input type="hidden" name="umi_cabinet" value="1" />';
+		$out .= '<input type="hidden" name="umi_cabinet_action" value="profile" />';
+		$out .= '<input type="hidden" name="umi_cabinet_return" value="' . esc_url( $return_url ) . '" />';
+		$out .= '<input type="hidden" name="umi_profile_photo_clear" value="0" class="umi-profile-clear-flag" />';
+		$out .= wp_nonce_field( 'umi_cabinet_profile', 'umi_cabinet_nonce_profile', true, false );
+		$out .= '<div class="umi-cabinet-upload umi-cabinet-profile-upload" data-umi-cabinet-upload>';
+		$out .= '<input type="hidden" class="umi-cabinet-attachment-id" name="umi_profile_photo_id" value="' . ( $photo_id > 0 ? (int) $photo_id : '' ) . '" />';
+		$out .= '<div class="umi-cabinet-upload-preview"' . ( $photo_id ? '' : ' hidden' ) . '><img src="' . ( $ava_url ? esc_url( $ava_url ) : '' ) . '" alt="" width="200" height="200" style="object-fit:cover;border-radius:8px;max-width:100%;height:auto" /></div>';
+		$out .= '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:0.5rem">';
+		$out .= '<label class="umi-cabinet-file-label umi-btn umi-btn--secondary" data-umi-avatar-choose><input type="file" class="umi-cabinet-file" accept="image/jpeg,image/png,image/gif,image/webp" style="position:absolute;opacity:0;width:0;height:0" tabindex="-1" />';
+		$out .= '<span>' . esc_html__( 'Выбрать изображение', 'umi-marketplace' ) . '</span></label>';
+		$out .= '<div data-umi-avatar-save hidden style="display:none">';
+		$out .= '<button type="submit" class="umi-btn umi-btn--primary">' . esc_html__( 'Сохранить', 'umi-marketplace' ) . '</button>';
 		$out .= '</div>';
+		$out .= '<button type="button" class="umi-btn umi-btn--outline" data-umi-avatar-inline-close>' . esc_html__( 'Отмена', 'umi-marketplace' ) . '</button>';
+		$out .= '</div>';
+		$out .= '</div></form>';
+		$out .= '</div>';
+		$out .= '</div>';
+		// Profile info form — separate form, not wrapping the avatar row above.
+		$out .= '<form method="post" class="umi-form" action="' . esc_url( $return_url ) . '#umi-cabinet">';
+		$out .= '<input type="hidden" name="umi_cabinet" value="1" />';
+		$out .= '<input type="hidden" name="umi_cabinet_action" value="profile_info" />';
+		$out .= '<input type="hidden" name="umi_cabinet_return" value="' . esc_url( $return_url ) . '" />';
+		$out .= wp_nonce_field( 'umi_cabinet_profile_info', 'umi_cabinet_nonce_profile_info', true, false );
 		$out .= '<div class="umi-form-row"><label class="umi-label" for="umi_pi_name">' . esc_html__( 'Отображаемое имя', 'umi-marketplace' ) . '</label>';
 		$out .= '<input type="text" id="umi_pi_name" name="umi_display_name" class="umi-input" style="width:100%;box-sizing:border-box;margin-top:0.35rem" value="' . esc_attr( $user->display_name ) . '" required /></div>';
 		$out .= '<div class="umi-form-row"><label class="umi-label" for="umi_pi_phone">' . esc_html__( 'Телефон', 'umi-marketplace' ) . '</label>';
