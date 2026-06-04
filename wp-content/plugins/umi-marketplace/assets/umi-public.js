@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   'use strict';
 
   function $(sel, ctx) {
@@ -21,7 +21,7 @@
         return;
       }
       var div = document.createElement('div');
-      div.className = 'umi-chat-msg' + (m.is_mine ? ' umi-chat-msg--mine' : '');
+      div.className = 'umi-chat-msg' + (m.is_mine ? ' umi-chat-msg--mine' : '') + (m.is_support ? ' umi-chat-msg--support' : '');
       div.setAttribute('data-id', String(m.id));
       div.innerHTML =
         '<div class="umi-chat-msg-meta">' +
@@ -29,7 +29,17 @@
         '</div>' +
         '<div class="umi-chat-msg-body"></div>';
       if (!m.is_mine) {
-        $('.umi-chat-msg-author', div).textContent = m.sender || '';
+        var authorEl = $('.umi-chat-msg-author', div);
+        if (m.is_support) {
+          authorEl.innerHTML = '';
+          var nameNode = document.createTextNode((m.sender || '') + ' ');
+          var boldTag = document.createElement('strong');
+          boldTag.textContent = '(администратор)';
+          authorEl.appendChild(nameNode);
+          authorEl.appendChild(boldTag);
+        } else {
+          authorEl.textContent = m.sender || '';
+        }
       }
       var bodyEl = $('.umi-chat-msg-body', div);
       if (m.attachment_url) {
@@ -188,6 +198,12 @@
           el.textContent = n > 0 ? String(n) : '';
           el.setAttribute('data-umi-unread', String(n));
           el.classList.toggle('umi-chat-badge--empty', n < 1);
+        });
+        var an = json.data && typeof json.data.admin_unread === 'number' ? json.data.admin_unread : 0;
+        console.log('[umi] badgePoll admin_unread=', an, 'raw=', json.data);
+        document.querySelectorAll('[data-umi-admin-badge]').forEach(function (el) {
+          el.textContent = an > 0 ? String(an) : '';
+          if (an > 0) { el.removeAttribute('hidden'); } else { el.setAttribute('hidden', 'hidden'); }
         });
       })
       .catch(function () {});
@@ -388,6 +404,11 @@
       document.body.style.overflow = 'hidden';
       var first = modal.querySelector('button,input:not([type="hidden"]),textarea,select,a[href]');
       if (first) setTimeout(function () { first.focus(); }, 40);
+      // Lazy-init chats inside modals that were hidden on page load.
+      modal.querySelectorAll('.umi-chat[data-thread]:not([data-chat-inited])').forEach(function (chat) {
+        chat.setAttribute('data-chat-inited', '1');
+        chatInit(chat);
+      });
     }
     function closeModal(modal) {
       if (!modal) return;
@@ -517,7 +538,11 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.umi-chat').forEach(chatInit);
+    document.querySelectorAll('.umi-chat[data-thread]').forEach(function (chat) {
+      if (chat.closest('.umi-modal[hidden]')) return;
+      chat.setAttribute('data-chat-inited', '1');
+      chatInit(chat);
+    });
     if (document.querySelector('.umi-chat-badge') && window.umiMp) {
       var ms = window.umiMp.pollMs ? parseInt(window.umiMp.pollMs, 10) : 5000;
       setInterval(badgePoll, ms);

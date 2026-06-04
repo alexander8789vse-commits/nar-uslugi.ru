@@ -544,6 +544,10 @@ JS;
 .umi-modal .umi-cabinet-panels .umi-cabinet-panel:not(.is-active):not([hidden]) { display: none; }
 .umi-modal .umi-cabinet-panels .umi-cabinet-panel.is-active { display: block; }
 .umi-modal .umi-cabinet-panels [hidden] { display: none !important; }
+
+/* ── Admin support messages ───────────────────────────── */
+.umi-chat-msg--support .umi-chat-msg-author { font-weight: 700; }
+.umi-chat-msg--support .umi-chat-msg-text { font-weight: 700; }
 ';
 	}
 }

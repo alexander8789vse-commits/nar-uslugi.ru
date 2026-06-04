@@ -56,10 +56,11 @@ class Umi_Ajax {
 
 		Umi_Chat::mark_thread_read( $thread_id, get_current_user_id() );
 
-		$rows = Umi_Chat::messages_after( $thread_id, $after_id );
-		$out  = array();
+		$rows       = Umi_Chat::messages_after( $thread_id, $after_id );
+		$support_id = (int) Umi_Chat::support_user_id();
+		$out        = array();
 		foreach ( $rows as $row ) {
-			$u  = get_userdata( (int) $row['sender_id'] );
+			$u   = get_userdata( (int) $row['sender_id'] );
 			$aid = isset( $row['attachment_id'] ) ? (int) $row['attachment_id'] : 0;
 			$aurl = '';
 			if ( $aid > 0 ) {
@@ -67,13 +68,14 @@ class Umi_Ajax {
 				$aurl = $u1 ? (string) $u1 : (string) wp_get_attachment_url( $aid );
 			}
 			$out[] = array(
-				'id'              => (int) $row['id'],
-				'sender'          => $u ? $u->display_name : '',
-				'body'            => wp_kses_post( $row['body'] ),
-				'created_at'      => $row['created_at'],
-				'is_mine'         => (int) $row['sender_id'] === get_current_user_id(),
-				'attachment_id'   => $aid,
-				'attachment_url'  => $aurl,
+				'id'             => (int) $row['id'],
+				'sender'         => $u ? $u->display_name : '',
+				'is_support'     => $support_id > 0 && (int) $row['sender_id'] === $support_id,
+				'body'           => wp_kses_post( $row['body'] ),
+				'created_at'     => $row['created_at'],
+				'is_mine'        => (int) $row['sender_id'] === get_current_user_id(),
+				'attachment_id'  => $aid,
+				'attachment_url' => $aurl,
 			);
 		}
 
@@ -135,9 +137,12 @@ class Umi_Ajax {
 	 */
 	public static function unread() {
 		self::verify();
+		$uid        = get_current_user_id();
+		$adm_thread = (int) Umi_Chat::get_or_create_admin_thread( $uid );
 		wp_send_json_success(
 			array(
-				'unread' => Umi_Chat::unread_count_for_user( get_current_user_id() ),
+				'unread'       => Umi_Chat::unread_count_for_user( $uid ),
+				'admin_unread' => $adm_thread > 0 ? (int) Umi_Chat::unread_in_thread_for_user( $adm_thread, $uid ) : 0,
 			)
 		);
 	}

@@ -389,7 +389,7 @@ class Umi_Chat {
 		if ( $tt === self::TYPE_DISPUTE && ! empty( $thread['deal_id'] ) ) {
 			$link = add_query_arg( 'umi_deal', (int) $thread['deal_id'], $cab ) . '#umi-deals';
 		} elseif ( $tt === self::TYPE_ADMIN ) {
-			$link = $cab . '#umi-cabinet-admin-chat';
+			$link = add_query_arg( 'umi_admin_thread', (int) $thread_id, $cab ) . '#umi-cabinet-admin-chat';
 		}
 		$recipients = array();
 		$b = (int) $thread['buyer_id'];
@@ -402,11 +402,23 @@ class Umi_Chat {
 			$recipients = array( $b, $s );
 		}
 		$recipients = array_unique( array_filter( array_map( 'intval', $recipients ) ) );
-		$subj = sprintf(
-			/* translators: %s site name */
-			__( '[%s] Новое сообщение в чате', 'umi-marketplace' ),
-			wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES )
-		);
+		$site = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
+		if ( $tt === self::TYPE_ADMIN ) {
+			$sender_user = get_userdata( $sender_id );
+			$sender_name = $sender_user ? $sender_user->display_name : sprintf( 'ID %d', $sender_id );
+			$subj = sprintf(
+				/* translators: 1: site name, 2: user display name */
+				__( '[%1$s] Сообщение администратору от пользователя %2$s', 'umi-marketplace' ),
+				$site,
+				$sender_name
+			);
+		} else {
+			$subj = sprintf(
+				/* translators: %s site name */
+				__( '[%s] Новое сообщение в чате', 'umi-marketplace' ),
+				$site
+			);
+		}
 		$excerpt = wp_trim_words( (string) $body_excerpt, 40, '…' );
 		$message = $subj . "\n\n" . $excerpt . "\n\n" . $link . "\n";
 
@@ -732,18 +744,24 @@ class Umi_Chat {
 		$lim     = (int) $limit;
 		$is_mod  = user_can( $user_id, 'manage_options' ) ? 1 : 0;
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$sql = $wpdb->prepare(
-			"SELECT t.id, t.listing_id, t.listing_type, t.buyer_id, t.seller_id, t.thread_type, t.deal_id, p.post_title
+		$msgs = Umi_Database::messages_table();
+		$sql  = $wpdb->prepare(
+			"SELECT t.id, t.listing_id, t.listing_type, t.buyer_id, t.seller_id, t.thread_type, t.deal_id, p.post_title,
+			(SELECT MAX(m.id) FROM $msgs m WHERE m.thread_id = t.id) AS last_msg_id
 			FROM $threads t
 			LEFT JOIN {$wpdb->posts} p ON p.ID = t.listing_id
 			WHERE ((t.buyer_id = %d OR t.seller_id = %d) AND t.thread_type != %s)
 			OR (t.thread_type = %s AND %d = 1)
-			ORDER BY t.id DESC
+			OR (t.thread_type = %s AND t.seller_id = %d AND %d = 1)
+			ORDER BY last_msg_id DESC
 			LIMIT " . (int) $lim,
 			$user_id,
 			$user_id,
 			self::TYPE_ADMIN,
 			self::TYPE_DISPUTE,
+			$is_mod,
+			self::TYPE_ADMIN,
+			$user_id,
 			$is_mod
 		);
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
@@ -761,7 +779,12 @@ class Umi_Chat {
 			if ( self::TYPE_ADMIN === $tt ) {
 				$sup = get_userdata( (int) self::support_user_id() );
 				$other_name    = ( $user_id === (int) $row['buyer_id'] && $sup ) ? (string) $sup->display_name : $other_name;
-				$listing_title = $listing_title ? $listing_title : __( 'Администратор', 'umi-marketplace' );
+				if ( $user_id === (int) $row['seller_id'] ) {
+					$listing_title = sprintf( __( 'Сообщение администратору от пользователя %s', 'umi-marketplace' ), $other_name );
+					$other_name    = '';
+				} else {
+					$listing_title = $listing_title ? $listing_title : __( 'Администратор', 'umi-marketplace' );
+				}
 			} elseif ( self::TYPE_DISPUTE === $tt ) {
 				$did = isset( $row['deal_id'] ) ? (int) $row['deal_id'] : 0;
 				$listing_title = $did
@@ -777,6 +800,7 @@ class Umi_Chat {
 				'deal_id'       => isset( $row['deal_id'] ) ? (int) $row['deal_id'] : 0,
 				'listing_title' => $listing_title,
 				'other_name'    => $other_name,
+				'buyer_id'      => (int) $row['buyer_id'],
 				'unread_count'  => $unread,
 			);
 		}

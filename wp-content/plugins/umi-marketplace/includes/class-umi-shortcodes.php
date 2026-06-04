@@ -934,11 +934,23 @@ class Umi_Shortcodes {
 			$auto_open = 'umi-modal-deals';
 		}
 
+		// Admin thread: auto-open admin-chat modal if umi_admin_thread is in URL.
+		if ( '' === $auto_open && isset( $_GET['umi_admin_thread'] ) && current_user_can( 'manage_options' ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$auto_open = 'umi-modal-admin-chat';
+		}
+
 		// Threads (used in modal and sidebar badge).
 		$threads = Umi_Chat::threads_for_user( $uid, 25 );
 
 		// Admin chat thread.
 		$adm_thread = (int) Umi_Chat::get_or_create_admin_thread( $uid );
+		// If admin views a specific user's admin-chat thread via umi_admin_thread param.
+		if ( ! $adm_thread && isset( $_GET['umi_admin_thread'] ) && current_user_can( 'manage_options' ) ) {
+			$req_thread = (int) $_GET['umi_admin_thread'];
+			if ( $req_thread > 0 && Umi_Chat::user_can_access_thread( $req_thread, $uid ) ) {
+				$adm_thread = $req_thread;
+			}
+		}
 
 		// ===================== MODALS =====================
 
@@ -1024,7 +1036,12 @@ class Umi_Shortcodes {
 				if ( Umi_Chat::TYPE_DISPUTE === $tt && $deal > 0 ) {
 					$chat_href = add_query_arg( 'umi_deal', $deal, $return_url ) . '#umi-deals';
 				} elseif ( Umi_Chat::TYPE_ADMIN === $tt ) {
-					$chat_href = $return_url . '#umi-cabinet-admin-chat';
+					$buyer_id  = isset( $t['buyer_id'] ) ? (int) $t['buyer_id'] : 0;
+					if ( $buyer_id && $buyer_id !== $uid ) {
+						$chat_href = add_query_arg( 'umi_admin_thread', (int) $t['thread_id'], $return_url ) . '#umi-cabinet-admin-chat';
+					} else {
+						$chat_href = $return_url . '#umi-cabinet-admin-chat';
+					}
 				} else {
 					$chat_href = $lid > 0
 						? ( add_query_arg( 'umi_thread', (int) $t['thread_id'], get_permalink( $lid ) ) . '#umi-chat' )
@@ -1159,8 +1176,11 @@ class Umi_Shortcodes {
 			$out .= '</button>';
 		}
 
+		$adm_unread = $adm_thread > 0 ? (int) Umi_Chat::unread_in_thread_for_user( $adm_thread, $uid ) : 0;
 		$out .= '<button type="button" class="umi-cabinet-nav-item" data-umi-open-modal="umi-modal-admin-chat">';
 		$out .= '<span class="umi-cabinet-nav-item__label">' . esc_html__( 'Чат с администратором', 'umi-marketplace' ) . '</span>';
+		$badge_hidden = $adm_unread < 1 ? ' hidden' : '';
+		$out .= '<span class="umi-cabinet-nav-item__count" data-umi-admin-badge' . $badge_hidden . '>' . ( $adm_unread > 0 ? $adm_unread : '' ) . '</span>';
 		$out .= '</button>';
 
 		$out .= '<button type="button" class="umi-cabinet-nav-item" data-umi-open-modal="umi-modal-profile-info">';
